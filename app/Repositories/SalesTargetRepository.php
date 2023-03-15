@@ -20,11 +20,11 @@ class SalesTargetRepository implements SalesTargetRepositoryInterface
         })->when($filter['qdate'], function ($query) use ($filter) {
             $query->whereMonth('month_year', date('m', strtotime($filter['qdate'])))->whereYear('month_year', date('Y', strtotime($filter['qdate'])));
         })->select([
-            DB::raw("CAST(YEAR(month_year) AS VARCHAR(4)) + '-' + right('00' + CAST(MONTH(month_year) AS VARCHAR(2)), 2) as month_year"),
+            DB::raw("CAST(YEAR(month_year) AS CHAR(4)) + '-' + right('00' + CAST(MONTH(month_year) AS CHAR(2)), 2) as month_year"),
             DB::raw('SUM(total_participant) as total_participant'),
             DB::raw('SUM(total_target) as total_target'),
         ])->
-        groupBy(DB::raw("CAST(YEAR(month_year) AS VARCHAR(4)) + '-' + right('00' + CAST(MONTH(month_year) AS VARCHAR(2)), 2)"))->
+        groupBy(DB::raw("CAST(YEAR(month_year) AS CHAR(4)) + '-' + right('00' + CAST(MONTH(month_year) AS CHAR(2)), 2)"))->
         first();
     }
 

@@ -220,7 +220,7 @@ class InvoiceProgramRepository implements InvoiceProgramRepositoryInterface
         $month = date('m', strtotime($monthYear));
 
         return InvoiceProgram::leftJoin('clientprogram', 'clientprogram.clientprog_id', '=', 'tbl_inv.clientprog_id')
-            ->select(DB::raw('COUNT(id) as count_invoice'), DB::raw('CAST(sum(inv_totalprice_idr) as integer) as total'))
+            ->select(DB::raw('COUNT(id) as count_invoice'), DB::raw('CAST(sum(inv_totalprice_idr) as UNSIGNED) as total'))
             ->whereYear('tbl_inv.inv_duedate', '=', $year)
             ->whereMonth('tbl_inv.inv_duedate', '=', $month)
             ->where('clientprogram.status', 1)

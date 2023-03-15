@@ -428,7 +428,7 @@ class InvoiceB2bRepository implements InvoiceB2bRepositoryInterface
         return Invb2b::leftJoin('tbl_sch_prog', 'tbl_sch_prog.id', '=', 'tbl_invb2b.schprog_id')
             ->leftJoin('tbl_partner_prog', 'tbl_partner_prog.id', '=', 'tbl_invb2b.partnerprog_id')
             ->leftJoin('tbl_referral', 'tbl_referral.id', '=', 'tbl_invb2b.ref_id')
-            ->select(DB::raw('COUNT(invb2b_num) as count_invoice'), DB::raw('CAST(sum(invb2b_totpriceidr) as integer) as total'))
+            ->select(DB::raw('COUNT(invb2b_num) as count_invoice'), DB::raw('CAST(sum(invb2b_totpriceidr) as UNSIGNED) as total'))
             ->whereYear('tbl_invb2b.invb2b_duedate', '=', $year)
             ->whereMonth('tbl_invb2b.invb2b_duedate', '=', $month)
             ->where(

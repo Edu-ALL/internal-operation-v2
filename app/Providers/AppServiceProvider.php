@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
             $user = auth()->user();
             $collection = new Collection();
 
-            if (isset($user) && $user->department->count() > 0) {
+            if (isset($user) && ($user->department->count() > 0 || $user->roles()->where('role_name', 'admin')->count() > 0) ) {
                 foreach ($user->department as $menus) {
                     foreach ($menus->access_menus as $menu) {
                         $collection->push([
