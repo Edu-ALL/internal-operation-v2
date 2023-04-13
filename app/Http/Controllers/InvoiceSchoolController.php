@@ -385,8 +385,6 @@ class InvoiceSchoolController extends Controller
             DB::rollBack();
             Log::error('Update invoice failed : ' . $e->getMessage());
 
-            return $e->getMessage();
-            exit;
             return Redirect::to('invoice/school-program/' . $schProgId . '/detail/' . $invNum)->withError('Failed to update invoice');
         }
 

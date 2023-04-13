@@ -586,9 +586,4 @@ class ClientParentController extends Controller
 
         return Redirect::to('client/parent/' . $parentId)->withSuccess('A parent has been updated.');
     }
-
-    public function download_template()
-    {
-        return Excel::download(new ParentTemplate, 'parent.xlsx');
-    }
 }

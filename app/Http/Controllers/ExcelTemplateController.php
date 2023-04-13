@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ClientEventTemplate;
+use App\Exports\MasterClient;
 use App\Exports\StudentTemplate;
+use App\Exports\MasterStudent;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -16,7 +18,11 @@ class ExcelTemplateController extends Controller
         switch ($type) {
 
             case "student":
-                return Excel::download(new StudentTemplate, 'student-template.xlsx');
+                return Excel::download(new MasterClient(['student']), 'student-template.xlsx');
+                break;
+
+            case "parent":
+                return Excel::download(new MasterClient(['parent']), 'parent-template.xlsx');
                 break;
 
 

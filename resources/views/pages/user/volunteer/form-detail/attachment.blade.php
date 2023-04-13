@@ -101,15 +101,15 @@
             </div>
             <div class="col-9 d-flex">
                 <div class="w-50 me-2">
-                    <small>NPWP Number</small>
-                    <input type="number" name="volunt_npwp_number" id="" class="form-control form-control-sm rounded" value="{{ isset($volunteer->volunt_npwp_number) ? $volunteer->volunt_npwp_number : old('volunt_npwp_number') }}">
+                    <small>NPWP Number <sup class="text-danger">*</sup></small>
+                    <input type="text" name="volunt_npwp_number" id="" class="form-control form-control-sm rounded" value="{{ isset($volunteer->volunt_npwp_number) ? $volunteer->volunt_npwp_number : old('volunt_npwp_number') }}">
                     @error('volunt_npwp_number')
                         <small class="text-danger fw-light">{{ $message }}</small>
                     @enderror
                 </div>
                 <div class="w-50">
                     @if(!isset($volunteer->volunt_npwp))    
-                        <small>Image</small>
+                        <small>Image <sup class="text-danger">*</sup></small>
                         <input type="file" name="volunt_npwp" id="" class="form-control form-control-sm rounded">
                         @error('volunt_npwp')
                             <small class="text-danger fw-light">{{ $message }}</small>

@@ -58,11 +58,30 @@ class Program extends Model
         );
     }
 
+    // public function programName(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn ($value) => $this->main_prog->prog_name . ' ' . $this->prog_program,
+    //     );
+    // }
+
     public function programName(): Attribute
     {
-        return Attribute::make(
-            get: fn ($value) => $this->main_prog->prog_name.' '.$this->prog_program,
-        );
+        if ($this->sub_prog != null) {
+
+            if ($this->main_prog->prog_name == $this->sub_prog->sub_prog_name) {
+                return Attribute::make(
+                    get: fn ($value) => $this->main_prog->prog_name . ' - ' . $this->prog_program,
+                );
+            }
+            return Attribute::make(
+                get: fn ($value) => $this->main_prog->prog_name . ' - ' . $this->sub_prog->sub_prog_name . ' - ' . $this->prog_program,
+            );
+        } else {
+            return Attribute::make(
+                get: fn ($value) => $this->main_prog->prog_name . ' - ' . $this->prog_program,
+            );
+        }
     }
 
 
@@ -71,7 +90,7 @@ class Program extends Model
     {
         return $this->hasMany(SchoolProgram::class, 'prog_id', 'prog_id');
     }
-    
+
     public function main_prog()
     {
         return $this->belongsTo(MainProg::class, 'main_prog_id', 'id');
