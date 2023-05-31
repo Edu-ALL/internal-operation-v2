@@ -169,7 +169,7 @@
             });
 
             var i = 1;
-
+            var widthView = $(window).width();
             var table = $('#eventTrackTable').DataTable({
                 dom: 'Bfrtip',
                 lengthMenu: [
@@ -184,8 +184,8 @@
                 ],
                 scrollX: true,
                 fixedColumns: {
-                    left: 2,
-                    right: 1
+                    left: (widthView < 768) ? 1 : 2,
+                    right: (widthView < 768) ? 0 : 1,
                 },
                 processing: true,
                 serverSide: true,

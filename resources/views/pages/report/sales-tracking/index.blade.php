@@ -77,7 +77,7 @@
                 <div class="card-header">
                     <h6 class="p-0 m-0">Client Program</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     @if ($countClientProgram['pending'] > 0)
                     <table class="table mb-3">
                         <thead>
@@ -256,7 +256,7 @@
                 <div class="card-header">
                     <h6 class="p-0 m-0">Initial Assessment Progress</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     @if (isset($initAssessmentProgress))
                     <table class="table mb-3">
                         <thead>
@@ -326,10 +326,10 @@
 
             <div class="card mb-3">
                 <div class="card-header">
-                    <h6 class="p-0 m-0">
+                    <h6 class="p-0 m-0" style="line-height: 1.2">
                         Average Conversion Time to Successful Programs</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     <table class="table mb-3">
                         <thead>
                             <tr>

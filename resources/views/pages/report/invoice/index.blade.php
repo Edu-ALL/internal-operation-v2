@@ -26,7 +26,7 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card mb-3">
                 <div class="card-header">
                     <h6 class="p-0 m-0">Detail</h6>
                 </div>
