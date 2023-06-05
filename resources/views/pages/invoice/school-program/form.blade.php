@@ -28,7 +28,7 @@
                     <h4>{{ $school->sch_name }}</h4>
                     <a
                         href="{{ route('school.detail.show', ['school' => $school->sch_id, 'detail' => $schoolProgram->id]) }}" class="text-primary text-decoration-none cursor-pointer" target="_blank">
-                        <h6 class="d-flex flex-column">
+                        <h6 class="d-flex flex-column" style="line-height: 1.4">
                             {{ $schoolProgram->program->program_name }}
                         </h6>
                     </a>

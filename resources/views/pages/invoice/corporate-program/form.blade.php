@@ -29,7 +29,7 @@
                     <h4>{{ $partnerProgram->corp->corp_name }}</h4>
                     <a
                         href="{{ route('corporate_prog.detail.show', ['corp' =>  $partnerProgram->corp->corp_id, 'detail' => $partnerProgram->id]) }}" class="text-primary text-decoration-none cursor-pointer" target="_blank">
-                        <h6 class="d-flex flex-column">
+                        <h6 class="d-flex flex-column" style="line-height: 1.4">
                             {{ $partnerProgram->program->program_name }}
                         </h6>
                     </a>           

@@ -68,7 +68,7 @@
         </table>
 
         {{-- IF INSTALLMENT EXIST  --}}
-        <div class="mt-3">
+        <div class="mt-3 overflow-auto">
             @if($invoicePartner->inv_detail->count() > 0)
                 Installment List
                 <table class="table table-bordered table-hover" id="installment-list">

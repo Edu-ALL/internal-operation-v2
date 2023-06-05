@@ -13,35 +13,35 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row mb-2 g-1">
-                            <div class="col-md-4 d-flex justify-content-between">
+                            <div class="col d-flex justify-content-between">
                                 <label>
                                     E-mail
                                 </label>
                                 <label>:</label>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-8 col-8">
                                 {{ $invoicePartner->partner_prog->corp->corp_mail ? $invoicePartner->partner_prog->corp->corp_mail : 'Not Available' }}
                             </div>
                         </div>
                         <div class="row mb-2 g-1">
-                            <div class="col-md-4 d-flex justify-content-between">
+                            <div class="col d-flex justify-content-between">
                                 <label>
                                     Phone Number
                                 </label>
                                 <label>:</label>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-8 col-8">
                                 {{ $invoicePartner->partner_prog->corp->corp_phone ? $invoicePartner->partner_prog->corp->corp_phone : 'Not Available' }}
                             </div>
                         </div>
                         <div class="row mb-2 g-1">
-                            <div class="col-md-4 d-flex justify-content-between">
+                            <div class="col d-flex justify-content-between">
                                 <label>
                                     Address
                                 </label>
                                 <label>:</label>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-8 col-8">
                                 {!! $invoicePartner->partner_prog->corp->corp_address !!}
                                     {{ $invoicePartner->partner_prog->corp->corp_region }}
                             </div>

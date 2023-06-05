@@ -1,7 +1,10 @@
 @extends('layout.main')
 
 @section('title', 'Receipt - Referral - Bigdata Platform')
-
+@section('css')
+    <link rel="stylesheet" href="{{ asset('library/dashboard/css/vertical-layout-light/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/client.css') }}">
+@endsection
 @section('content')
 
     <div class="d-flex align-items-center justify-content-between mb-3">

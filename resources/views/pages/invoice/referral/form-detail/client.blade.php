@@ -13,35 +13,35 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row mb-2 g-1">
-                            <div class="col-md-4 d-flex justify-content-between">
+                            <div class="col d-flex justify-content-between">
                                 <label>
                                     E-mail
                                 </label>
                                 <label>:</label>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-8 col-8">
                                 {{ $partner->corp_mail ? $partner->corp_mail : 'Not Available' }}
                             </div>
                         </div>
                         <div class="row mb-2 g-1">
-                            <div class="col-md-4 d-flex justify-content-between">
+                            <div class="col d-flex justify-content-between">
                                 <label>
                                     Phone Number
                                 </label>
                                 <label>:</label>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-8 col-8">
                                 {{ $partner->corp_phone ? $partner->corp_phone : 'Not Available' }}
                             </div>
                         </div>
                         <div class="row mb-2 g-1">
-                            <div class="col-md-4 d-flex justify-content-between">
+                            <div class="col d-flex justify-content-between">
                                 <label>
                                     Address
                                 </label>
                                 <label>:</label>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-8 col-8">
                                 {!! $partner->corp_address !!}
                                 {{ $partner->corp_region }}
                             </div>

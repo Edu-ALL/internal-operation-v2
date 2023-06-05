@@ -24,7 +24,7 @@
         {{ $errors }}
     @endif
 
-    <div class="row">
+    <div class="row gap-md-0 gap-3">
         <div class="col-md-4">
             <div class="card rounded mb-3">
                 <div class="card-body text-center">
@@ -32,7 +32,7 @@
                     <h4><a class="text-dark text-decoration-none" href="{{ route('corporate.show', ['corporate' => $partner->corp_id]) }}">{{ $partner->corp_name }}</a></h4>
                     <a
                         href="{{ route('referral.show', ['referral' =>  $referral->id]) }}" class="text-primary text-decoration-none cursor-pointer" target="_blank">                    
-                        <h6 class="d-flex flex-column">
+                        <h6 class="d-flex flex-column" style="line-height: 1.4">
                             @if (isset($referral->prog_id))
                                 {{ $referral->program->program_name }}
                             @else
@@ -216,7 +216,7 @@
 
         <div class="col-md-8">
             <div class="card rounded mb-3">
-                <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="card-header d-flex flex-md-row flex-column align-items-center justify-content-between gap-md-0 gap-2">
                     <div class="">
                         <h6 class="m-0 p-0">
                             <i class="bi bi-person me-2"></i>
@@ -314,7 +314,7 @@
                                     value="{{ isset($invoiceRef) ? $invoiceRef->invb2b_totprice : null }}">
                             </div>
 
-                            <div class="col-md-5 mb-3">
+                            <div class="col-md-5 mb-3 mt-3">
                                 <label for="">Payment Method</label>
                                 <select name="invb2b_pm" id="payment_method" class="select w-100"
                                     {{ empty($invoiceRef) || $status == 'edit' ? '' : 'disabled' }}>

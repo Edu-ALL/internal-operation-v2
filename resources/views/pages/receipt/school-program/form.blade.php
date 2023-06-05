@@ -19,10 +19,10 @@
             <div class="card rounded mb-3">
                 <div class="card-body text-center">
                     <h3><i class="bi bi-person"></i></h3>
-                    <h4>{{ $invoiceSch->sch_prog->school->sch_name }}</h4>
+                    <h4 style="line-height: 1.4">{{ $invoiceSch->sch_prog->school->sch_name }}</h4>
                     <a
                         href="{{ route('school.detail.show', ['school' => $invoiceSch->sch_prog->school->sch_id, 'detail' => $invoiceSch->sch_prog->id]) }}" class="text-primary text-decoration-none cursor-pointer" target="_blank">
-                        <h6 class="d-flex flex-column">
+                        <h6 class="d-flex flex-column" style="line-height: 1.4">
                             {{ $invoiceSch->sch_prog->program->program_name }}
                         </h6>
                     </a>

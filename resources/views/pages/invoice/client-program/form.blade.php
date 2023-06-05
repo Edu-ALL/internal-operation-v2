@@ -22,7 +22,7 @@
 
                     <a
                         href="{{ route('student.program.show', ['student' => $clientProg->client->id, 'program' => $clientProg->clientprog_id]) }}" class="text-primary text-decoration-none cursor-pointer" target="_blank">
-                        <h6 class="d-flex flex-column">
+                        <h6 class="d-flex flex-column" style="line-height: 1.4">
                             {{$clientProg->program->program_name}}
 
                             {{-- @php
@@ -281,7 +281,7 @@
 
         <div class="col-md-8">
             <div class="card rounded mb-3">
-                <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="card-header d-flex flex-md-row flex-column align-items-center justify-content-between gap-md-0 gap-1">
                     <div class="py-2">
                         <h6 class="m-0 p-0">
                             <i class="bi bi-person me-2"></i>

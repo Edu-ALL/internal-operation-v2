@@ -16,10 +16,10 @@
             <div class="card rounded mb-3">
                 <div class="card-body text-center">
                     <h3><i class="bi bi-person"></i></h3>
-                    <h4>{{ $client_prog->client->full_name }}</h4>
+                    <h4 style="line-height: 1.4">{{ $client_prog->client->full_name }}</h4>
                     <a href="{{ route('student.program.show', ['student' => $client_prog->client->id, 'program' => $client_prog->clientprog_id]) }}"
                         class="text-primary text-decoration-none cursor-pointer" target="_blank">
-                        <h6 class="d-flex flex-column">
+                        <h6 class="d-flex flex-column" style="line-height: 1.4">
                             {{$client_prog->program->program_name}}
                             {{-- @php
                                 $programName = explode('-', $client_prog->program_name);
