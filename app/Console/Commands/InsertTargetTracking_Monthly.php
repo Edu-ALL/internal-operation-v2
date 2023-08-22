@@ -46,6 +46,9 @@ class InsertTargetTracking_Monthly extends Command
 
         $now = Carbon::now();
 
+        $progressBar = $this->output->createProgressBar(0);
+        $progressBar->start();
+
         DB::beginTransaction();
         try {
 
@@ -79,10 +82,11 @@ class InsertTargetTracking_Monthly extends Command
                 ];
     
             }
-
     
             LeadTargetTracking::insert($targetTrackingDetails);
             DB::commit();
+
+            $progressBar->advance();
 
         } catch (Exception $e) {
             
@@ -90,6 +94,8 @@ class InsertTargetTracking_Monthly extends Command
             Log::info('Cron Insert target tracking not working normal. Error : '. $e->getMessage() .' | Line '. $e->getCode());
 
         }
+        
+        $progressBar->finish();
 
         return Command::SUCCESS;
     }
