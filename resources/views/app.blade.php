@@ -9,7 +9,6 @@
     </title>
     <link rel="shortcut icon" href="{{asset('img/favicon.png')}}" type="image/x-icon">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- CSS  --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
