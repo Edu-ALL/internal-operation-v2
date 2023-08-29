@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('tbl_program_lead_library', function (Blueprint $table) {
-            $table->foreign('leadbucket_id')->references('bucket_id')->on('tbl_lead_bucket_params')->onUpdate('cascade')->onDelete('cascade');
+            // $table->foreign('leadbucket_id')->references('bucket_id')->on('tbl_lead_bucket_params')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

@@ -184,7 +184,7 @@ class LeadTargetRepository implements LeadTargetRepositoryInterface
 
         $achieved_lead = $clients->merge($client_program);
 
-        return $achieved_lead;
+        return $clients;
     }
 
     public function getAchievedHotLeadReferralByMonth($now)
