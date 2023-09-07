@@ -8,8 +8,13 @@ use App\Http\Requests\StoreImportExcelRequest;
 use App\Http\Requests\StoreClientEventEmbedRequest;
 use App\Http\Traits\CheckExistingClient;
 use App\Http\Traits\CreateCustomPrimaryKeyTrait;
+use App\Http\Traits\RegisterExpressTrait;
 use App\Http\Traits\StandardizePhoneNumberTrait;
 use App\Imports\ClientEventImport;
+use App\Imports\InvitaionMailImport;
+use App\Imports\InvitationMailImport;
+use App\Imports\ThankMailImport;
+use App\Imports\ReminderEventImport;
 use App\Interfaces\ClientEventLogMailRepositoryInterface;
 use App\Interfaces\CurriculumRepositoryInterface;
 use App\Interfaces\ClientRepositoryInterface;
@@ -39,6 +44,7 @@ class ClientEventController extends Controller
     use CheckExistingClient;
     use CreateCustomPrimaryKeyTrait;
     use StandardizePhoneNumberTrait;
+    use RegisterExpressTrait;
     protected CurriculumRepositoryInterface $curriculumRepository;
     protected ClientRepositoryInterface $clientRepository;
     protected ClientEventRepositoryInterface $clientEventRepository;
@@ -452,6 +458,32 @@ class ClientEventController extends Controller
         return back()->withSuccess('Client event successfully imported');
     }
 
+    public function mailing(StoreImportExcelRequest $request)
+    {
+
+        $type = $request->route('type');
+        $file = $request->file('file');
+
+        $import = '';
+        switch ($type) {
+            case 'VVIP':
+                $import = new ThankMailImport;
+                break;
+
+            case 'VIP':
+                $import = new InvitationMailImport;
+                break;
+
+            case 'reminder_1':
+                $import = new ReminderEventImport;
+                break;
+            
+        }
+        $import->import($file);
+
+        return back()->withSuccess('Successfully send mail');
+    }
+
     public function createFormEmbed(Request $request)
     {        
         if ($request->get('event_name') == null) {
@@ -483,6 +515,7 @@ class ClientEventController extends Controller
         $existClientParent = $existClientStudent = $existClientTeacher = ['isExist' => false];
         $childDetails = [];
         $schoolId = null;
+        $childId = null;
 
         $requested_event_name = urldecode(str_replace('&quot;', '"', $request->event_name));
 
@@ -491,7 +524,7 @@ class ClientEventController extends Controller
         # attend status
         # 1 is attending
         # 0 is join the event 
-        $attend_status = $request->status == "attend" ? 1 : 0;
+        $attend_status = $request->attend_status == "attend" ? 1 : 0;
 
         # type of event
         # if the event helds offline then the value will be "offline"
@@ -499,8 +532,24 @@ class ClientEventController extends Controller
         # the difference is if event type is "offline" then system will send barcode via mails
         $event_type = $request->event_type;
 
+        # number of attend
+        # only for the people that register on the spot
+        $number_of_attend = isset($request->attend) ? $request->attend : 1;
+
+        # notes
+        # for stem+ wonderlab is for VIP & VVIP
+        $notes = $request->client_type;
+
+        # referral code
+        $referral_code = $request->referral;
+
+        # registration type 
+        # will be "ots" or "pr"
+        $registration_type = $request->status;
+
         // Check existing client by phone number and email
         $choosen_role = $request->role;
+
         DB::beginTransaction();
         try {
 
@@ -529,10 +578,24 @@ class ClientEventController extends Controller
             $clientEventDetails = [
                 'client_id' => $createdClient['clientId'],
                 'event_id' => $event->event_id,
-                'lead_id' => $request->leadsource,
+                'lead_id' => isset($referral_code) ? "LS005" : $request->leadsource, # if using referral code then lead source will be "referral" which is "LS005"
+                'number_of_attend' => $number_of_attend,
+                'notes' => $notes,
+                'referral_code' => $referral_code,
                 'status' => $attend_status,
                 'joined_date' => Carbon::now(),
             ];
+
+            if ($choosen_role == "parent")
+                $clientEventDetails['child_id'] = $createdClient['childId'];
+
+            if ($choosen_role == "student")
+                $clientEventDetails['parent_id'] = $createdClient['parentId'];
+
+            # if registration_type is exist 
+            # add the registration_type into the clientEventDetails that will be stored
+            if (isset($registration_type))
+                $clientEventDetails['registration_type'] = $registration_type;
 
             # store a new client event
             if ($clientEvent = $this->clientEventRepository->createClientEvent($clientEventDetails)) {
@@ -546,6 +609,11 @@ class ClientEventController extends Controller
                 if (isset($event_type) && $event_type == "offline") {
 
                     $this->sendMailQrCode($storedClientEventId, $requested_event_name, ['clientDetails' => ['mail' => $createdClient['clientMail'], 'name' => $createdClient['clientName']]]);
+
+                } else {
+                    
+                    # send thanks mail
+                    $this->sendMailThanks($storedClientEventId, $requested_event_name, ['clientDetails' => ['mail' => $createdClient['clientMail'], 'name' => $createdClient['clientName']]]);
 
                 }
 
@@ -566,137 +634,151 @@ class ClientEventController extends Controller
 
     private function createClient($choosen_role, $schoolId, $request)
     {
-        # store children information if it is parent that filled the form
-        if ($choosen_role == 'parent') {
-            $childDetails = [
-                'name' => $request->fullname[1],
-                'email' => null,
-                'phone' => null,
-                'register_as' => 'parent',
+
+        $relation = count(array_filter($request->fullname)); # this is the parameter that has maximum length of the requested client (ex: for parent and student the value would be 2 but teacher the value would be 1
+        $loop = 0;
+
+        while ($loop < $relation) {
+
+            # initialize raw variable
+            # why newClientDetails[$loop] should be array?
+            # because to make easier for system to differentiate between parents and students like for example if user registered as a parent 
+            # then index 0 is for parent data and index 1 is for children data, otherwise 
+            $newClientDetails[$loop] = [
+                'name' => $request->fullname[$loop],
+                'email' => $request->email[$loop],
+                'phone' => $request->fullnumber[$loop],
+                'register_as' => $choosen_role,
             ];
 
-            $phoneStudent = $childDetails['phone'];
+            # check if the client exist in our databases
+            $existingClient = $this->checkExistingClient($newClientDetails[$loop]['phone'], $newClientDetails[$loop]['email']);
+            if (!$existingClient['isExist']) {
 
-            $existClientStudent = $this->checkExistingClient($phoneStudent, $childDetails['email']);
-
-            if (!$existClientStudent['isExist']) {
-                $fullname = explode(' ', $childDetails['name']);
-                $limit = count($fullname);
+                # get firstname & lastname from fullname
+                $fullname = explode(' ', $newClientDetails[$loop]['name']);
+                $fullname_words = count($fullname);
 
                 $firstname = $lastname = null;
-                if ($limit > 1) {
-                    $lastname = $fullname[$limit - 1];
-                    unset($fullname[$limit - 1]);
+                if ($fullname_words > 1) {
+                    $lastname = $fullname[$fullname_words - 1];
+                    unset($fullname[$fullname_words - 1]);
                     $firstname = implode(" ", $fullname);
                 } else {
                     $firstname = implode(" ", $fullname);
                 }
 
-                $st_grade = 12 - ($request->graduation_year - date('Y'));
-
-
+                # all client basic info (whatever their role is)
                 $clientDetails = [
                     'first_name' => $firstname,
                     'last_name' => $lastname,
-                    'mail' => $childDetails['email'],
-                    'phone' => $childDetails['phone'],
-                    'register_as' => $childDetails['register_as'],
-                    'st_grade' => $st_grade,
-                    'graduation_year' => $request->graduation_year,
-                    'lead' => $request->leadsource,
-                    'sch_id' => $schoolId != null ? $schoolId : $request->school,
+                    'mail' => $newClientDetails[$loop]['email'],
+                    'phone' => $newClientDetails[$loop]['phone'],
+                    'lead_id' => "LS001", # hardcode for lead website
+                    'register_as' => $choosen_role,
                 ];
-                
 
-                $newClientStudent = $this->clientRepository->createClient('Student', $clientDetails);
+                # additional info that should be stored when role is student and parent
+                # because all of the additional info are for the student
+                if ($choosen_role == 'parent' && $loop == 1) {
+
+                    $additionalInfo = [
+                        'st_grade' => 12 - ($request->graduation_year - date('Y')),
+                        'graduation_year' => $request->graduation_year,
+                        'lead' => $request->leadsource,
+                        'sch_id' => $schoolId != null ? $schoolId : $request->school,
+                    ];
+
+                    $clientDetails = array_merge($clientDetails, $additionalInfo);
+                    
+                
+                } else if ($choosen_role == 'student' && $loop == 0) {
+
+                    $additionalInfo = [
+                        'st_grade' => 12 - ($request->graduation_year - date('Y')),
+                        'graduation_year' => $request->graduation_year,
+                        'lead' => $request->leadsource,
+                        'sch_id' => $schoolId != null ? $schoolId : $request->school,
+                    ];
+
+                    $clientDetails = array_merge($clientDetails, $additionalInfo);
+
+                }
+                
+                # additional info that should be stored when role is teacher
+                if ($choosen_role == 'teacher/counsellor') { 
+                
+                    $additionalInfo = [
+                        'sch_id' => $schoolId != null ? $schoolId : $request->school,
+                    ];
+
+                    $clientDetails = array_merge($clientDetails, $additionalInfo);
+                }
+
+                switch ($choosen_role) {
+
+                    case "parent":
+                        $role = $loop == 0 ? 'parent' : 'student';
+                        break;
+
+                    case "student":
+                        $role = $loop == 1 ? 'parent' : 'student';
+                        break;
+
+                    case "teacher/counsellor":
+                        $role = $choosen_role;
+                        break;
+                }
+                
+                # stored a new client information
+                $newClient[$loop] = $this->clientRepository->createClient($this->getRoleName($role), $clientDetails);
+                
             }
 
-            $clientStudentId = $existClientStudent['isExist'] ? $existClientStudent['id'] : $newClientStudent->id;
-            
+            $clientArrayIds[$loop] = $existingClient['isExist'] ? $existingClient['id'] : $newClient[$loop]->id;
+
+            $loop++;
         }
 
-        # initialize raw variable
-        $newClientDetails = [
-            'name' => $request->fullname[0],
-            'email' => $request->email[0],
-            'phone' => $request->fullnumber[0],
-            'register_as' => $choosen_role,
-        ];
-
-        # check if the client exist in our databases
-        $existingClient = $this->checkExistingClient($newClientDetails['phone'], $newClientDetails['email']);
-        if (!$existingClient['isExist']) {
-
-            # get firstname & lastname from fullname
-            $fullname = explode(' ', $newClientDetails['name']);
-            $fullname_words = count($fullname);
-
-            $firstname = $lastname = null;
-            if ($fullname_words > 1) {
-                $lastname = $fullname[$fullname_words - 1];
-                unset($fullname[$fullname_words - 1]);
-                $firstname = implode(" ", $fullname);
-            } else {
-                $firstname = implode(" ", $fullname);
-            }
-
-            # all client basic info (whatever their role is)
-            $clientDetails = [
-                'first_name' => $firstname,
-                'last_name' => $lastname,
-                'mail' => $newClientDetails['email'],
-                'phone' => $newClientDetails['phone'],
-                'lead' => $request->leadsource,
-                'register_as' => $choosen_role,
-            ];
-
-            # additional info that should be stored when role is student
-            if ($choosen_role == 'student') {
-
-                $additionalInfo = [
-                    'st_grade' => 12 - ($request->graduation_year - date('Y')),
-                    'graduation_year' => $request->graduation_year,
-                    'lead' => $request->leadsource,
-                    'sch_id' => $schoolId != null ? $schoolId : $request->school,
-                ];
-
-                $clientDetails = array_merge($clientDetails, $additionalInfo);
-            }
-
-            # additional info that should be stored when role is teacher
-            if ($choosen_role == 'teacher/counsellor') {
-
-                $additionalInfo = [
-                    'sch_id' => $schoolId != null ? $schoolId : $request->school,
-                ];
-
-                $clientDetails = array_merge($clientDetails, $additionalInfo);
-            }
-            
-            # stored a new client information
-            $newClient = $this->clientRepository->createClient($this->getRoleName($choosen_role), $clientDetails);
-
-            
+        # the indexes
+        # the idea is assuming the index 0 as the main user that will be added into tbl_client_event
+        if ($choosen_role == 'parent') 
+        {
+            $parentId = $newClientDetails[0]['id'] = $clientArrayIds[0];
+            $childId = $clientArrayIds[1];
+        } 
+        else if ($choosen_role == 'student')
+        {
+            $parentId = $clientArrayIds[1];
+            $childId = $newClientDetails[0]['id'] = $clientArrayIds[0];
+        } 
+        else 
+        {
+            $teacherId = $newClientDetails[0]['id'] = $clientArrayIds[0];
         }
 
         # store the destination country if registrant either parent or student
         if ($choosen_role == 'parent' || $choosen_role == 'student') {
 
-            $clientStudentId = isset($clientStudentId) ? $clientStudentId : $newClient->id;
-
-            $this->clientRepository->createDestinationCountry($clientStudentId, $request->destination_country);
+            $this->clientRepository->createDestinationCountry($childId, $request->destination_country);
         }
 
         $response = [
-            'clientId' => $existingClient['isExist'] ? $existingClient['id'] : $newClient->id,
-            'clientName' => $newClientDetails['name'],
-            'clientMail' => $newClientDetails['email']
+            'clientId' => $newClientDetails[0]['id'],
+            'clientName' => $newClientDetails[0]['name'],
+            'clientMail' => $newClientDetails[0]['email'],
         ];
 
-        # attaching parent and student
-        if ($choosen_role == 'parent') {
+        if ($choosen_role == "parent")
+            $response['childId'] = $childId;
 
-            $this->clientRepository->createManyClientRelation($response['clientId'], $clientStudentId);
+        if ($choosen_role == "student")
+            $response['parentId'] = $parentId;
+
+        # attaching parent and student
+        if ($choosen_role == 'parent' || $choosen_role == 'student') {
+
+            $this->clientRepository->createManyClientRelation($parentId, $childId);
 
         }
 
@@ -751,7 +833,7 @@ class ClientEventController extends Controller
         } catch (Exception $e) {
             
             $sent_mail = 0;
-            Log::error('Failed send email to participant of Event '.$eventName.' | error : '.$e->getMessage().' | Line '.$e->getLine());
+            Log::error('Failed send email qr code to participant of Event '.$eventName.' | error : '.$e->getMessage().' | Line '.$e->getLine());
 
         }
 
@@ -764,26 +846,147 @@ class ClientEventController extends Controller
 
         $logDetails = [
             'clientevent_id' => $clientEventId,
-            'sent_status' => $sent_mail
+            'sent_status' => $sent_mail,
+            'category' => 'qrcode-mail'
         ];
 
         return $this->clientEventLogMailRepository->createClientEventLogMail($logDetails);
     }
 
-    public function handlerScanQrCodeForAttend(Request $request)
+    public function sendMailThanks($clientEventId, $eventName, $client, $update = false)
     {
-        # get request
-        $event = $request->event;
+        $subject = 'Welcome to the '.$eventName.'!';
+        $mail_resources = 'mail-template.thanks-email';
+
+        $recipientDetails = $client['clientDetails'];
+
+        $clientEvent = $this->clientEventRepository->getClientEventById($clientEventId);
+        
+        $event = [
+            'eventName' => $eventName,
+            'eventDate' => date('l, d M Y', strtotime($clientEvent->event->event_startdate)),
+            'eventLocation' => $clientEvent->event->event_location
+        ];
+
+        try {
+            Mail::send($mail_resources, ['client' => $client['clientDetails'], 'event' => $event], function ($message) use ($subject, $recipientDetails) {
+                $message->to($recipientDetails['mail'], $recipientDetails['name'])
+                    ->subject($subject);
+            });
+            $sent_mail = 1;
+            
+        } catch (Exception $e) {
+            
+            $sent_mail = 0;
+            Log::error('Failed send email thanks to participant of Event '.$eventName.' | error : '.$e->getMessage().' | Line '.$e->getLine());
+
+        }
+
+        # if update is true 
+        # meaning that this function being called from scheduler
+        # that updating the client event log mail, so the system no longer have to create the client event log mail
+        if ($update === true) {
+            return true;    
+        }
+
+        $logDetails = [
+            'clientevent_id' => $clientEventId,
+            'sent_status' => $sent_mail,
+            'category' => 'thanks-mail'
+        ];
+
+        return $this->clientEventLogMailRepository->createClientEventLogMail($logDetails);
+    }
+
+    public function previewClientInformation(Request $request) 
+    {
         $clientEventId = $request->clientevent;
 
         $clientEvent = $this->clientEventRepository->getClientEventById($clientEventId);
-        $clientFullname = $clientEvent->client->full_name;
+        $client = $clientEvent->client;
+        $clientFullname = $client->full_name;
         $eventName = $clientEvent->event->event_title;
+
+        $secondaryClientInfo = $responseAdditionalInfo = array();
+        switch ($client->register_as) { # this is a choosen role
+
+            case "parent":
+                $secondaryClientInfo = $clientEvent->children;
+                $responseAdditionalInfo = [
+                    'school' => $secondaryClientInfo->school->sch_name,
+                    'graduation_year' => $secondaryClientInfo->graduation_year,
+                    'abr_country' => str_replace(',', ', ', $secondaryClientInfo->abr_country)
+                ];
+                break;
+
+            case "student":
+                $secondaryClientInfo = $clientEvent->parent;
+                $responseAdditionalInfo = [
+                    'school' => $client->school->sch_name,
+                    'graduation_year' => $client->graduation_year,
+                    'abr_country' => str_replace(',', ', ', $client->abr_country)
+                ];
+                break;
+
+        }
+
+        if (!isset($secondaryClientInfo))
+            abort(404);
+
+        $response = [
+            'client' => $client,
+            'client_event' => $clientEvent,
+            'secondary_client' => [
+                'personal_info' => $secondaryClientInfo,
+            ] + $responseAdditionalInfo
+        ];
+
+        return view('scan-qrcode.client-detail')->with($response);
+    }
+
+    public function handlerScanQrCodeForAttend(Request $request)
+    {
+        # get request
+        $event = $request->event; # not used for now becuase there is no event slug
+        $clientEventId = $request->clientevent;
+
+        $clientEvent = $this->clientEventRepository->getClientEventById($clientEventId);
+        $client = $clientEvent->client;
+
+        $clientFullname = $client->full_name;
+        $eventName = $clientEvent->event->event_title;
+
+        # initiate variables in order to
+        # update student information details
+        switch ($client->register_as) { # this is a choosen role
+
+            case "parent":
+                $childId = $clientEvent->children->id;
+                break;
+
+            case "student":
+                $childId = $client->id;
+                break;
+
+        }
+
+        # initiate variable in order to update client event
+        $newDetails = [
+            'number_of_attend' => $request->how_many_people_attended,
+            'status' => 1 # they came to the event
+        ];
 
         DB::beginTransaction();
         try {
 
-            $this->clientEventRepository->updateClientEvent($clientEventId, ['status' => 1]);
+            # update student information details
+            $this->clientRepository->updateClient($childId, [
+                'mail' => $request->secondary_mail,
+                'phone' => $request->secondary_phone
+            ]);
+
+            # update client event
+            $this->clientEventRepository->updateClientEvent($clientEventId, $newDetails);
             DB::commit();
 
         } catch (Exception $e) {
@@ -814,6 +1017,24 @@ class ClientEventController extends Controller
             Log::error('Update attendance client event failed : ' . $e->getMessage());
         }
         return response()->json($data);
+
+    }
+
+    public function registerExpress(Request $request)
+    {
+       
+        $clientId = $request->route('client');
+        $client = $this->clientRepository->getClientById($clientId);
+        $eventId = $request->route('event');
+
+        $dataRegister = $this->register($client->mail, $eventId, 'VIP'); 
+
+        if($dataRegister['success'] && !$dataRegister['already_join']){
+            return Redirect::to('form/thanks');
+        }else if($dataRegister['success'] && $dataRegister['already_join']){
+            return Redirect::to('form/already-join');
+        }
+        
 
     }
 }

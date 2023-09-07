@@ -138,7 +138,7 @@ class ClientProgram extends Model
 
     public function clientMentor()
     {
-        return $this->belongsToMany(User::class, 'tbl_client_mentor', 'clientprog_id', 'user_id')->withTimestamps();
+        return $this->belongsToMany(User::class, 'tbl_client_mentor', 'clientprog_id', 'user_id')->withPivot('timesheet_link')->withTimestamps();
     }
 
     public function followUp()
@@ -154,5 +154,10 @@ class ClientProgram extends Model
     public function acadTutorDetail()
     {
         return $this->hasMany(AcadTutorDetail::class, 'clientprog_id', 'clientprog_id');
+    }
+
+    public function logMail()
+    {
+        return $this->hasMany(ClientProgramLogMail::class, 'clientprog_id', 'clientprog_id');
     }
 }

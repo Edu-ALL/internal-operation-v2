@@ -48,39 +48,67 @@
                     <h6 class="p-0 m-0">Existing Client</h6>
                     {{-- <span class="badge bg-primary">{{ count($clientEvents) }}</span> --}}
                 </div>
-                <div class="card-body p-2 overflow-auto" style="max-height: 150px ">
+                <div class="card-body p-2">
                     <ul class="list-group">
-                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center"
-                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                            title="
-                                        @foreach ($existingMentee as $existMentee)
-                                            <p>
-                                                <b>{{ $existMentee->client->full_name }}</b> From {{ $existMentee->client->school->sch_name ?? '-' }}
-                                            </p> @endforeach
-                                        ">
+                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
                             <div class="">Mentee</div>
-                            <span class="badge badge-info">{{ $existingMentee->count() }}</span>
+                            <div class="dropdown">
+                                <span class="badge badge-info dropdown-toggle"
+                                    data-bs-toggle="dropdown">{{ $existingMentee->count() }}</span>
+                                <div class="dropdown-menu overflow-auto text-center px-2"
+                                    style="max-width: 450px; max-height:200px;">
+                                    {{ $existingMentee->count() > 0 ? '' : 'There is no data.' }}
+                                    <table class="table table-striped table-hover">
+                                        @foreach ($existingMentee as $existMentee)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ $existMentee->client->full_name }}</td>
+                                                <td>{{ $existMentee->client->school->sch_name ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            </div>
                         </li>
-                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center"
-                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                            title="
-                                        @foreach ($existingNonMentee as $existNonMentee)
-                                            <p>
-                                                <b>{{ $existNonMentee->client->full_name }}</b> From {{ $existNonMentee->client->school->sch_name ?? '-' }}
-                                            </p> @endforeach
-                                        ">
+                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
                             <div class="">Non Mentee</div>
-                            <span class="badge badge-info">{{ $existingNonMentee->count() }}</span>
+                            <div class="dropdown">
+                                <span class="badge badge-info dropdown-toggle"
+                                    data-bs-toggle="dropdown">{{ $existingNonMentee->count() }}</span>
+                                <div class="dropdown-menu overflow-auto text-center px-2"
+                                    style="max-width: 450px; max-height:200px;">
+                                    {{ $existingNonMentee->count() > 0 ? '' : 'There is no data.' }}
+                                    <table class="table table-striped table-hover">
+                                        @foreach ($existingNonMentee as $item)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ $item->client->full_name }}</td>
+                                                <td>{{ $item->client->school->sch_name ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            </div>
                         </li>
-                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center"
-                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                            title="
-                                        @foreach ($existingNonClient as $existNonClient)
-                                            <p>
-                                                <b>{{ $existNonClient->client->full_name }}</b> From {{ $existNonClient->client->school->sch_name ?? '-'}}
-                                            </p> @endforeach">
+                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
                             <div class="">Non Client</div>
-                            <span class="badge badge-info">{{ $existingNonClient->count() }}</span>
+                            <div class="dropdown">
+                                <span class="badge badge-info dropdown-toggle"
+                                    data-bs-toggle="dropdown">{{ $existingNonClient->count() }}</span>
+                                <div class="dropdown-menu overflow-auto text-center px-2"
+                                    style="max-width: 450px; max-height:200px;">
+                                    {{ $existingNonMentee->count() > 0 ? '' : 'There is no data.' }}
+                                    <table class="table table-striped table-hover">
+                                        @foreach ($existingNonClient as $item)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ $item->client->full_name }}</td>
+                                                <td>{{ $item->client->school->sch_name ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            </div>
                         </li>
 
                     </ul>
@@ -92,39 +120,70 @@
                     <h6 class="p-0 m-0">New Client</h6>
                     {{-- <span class="badge bg-primary">{{ count($clientEvents) }}</span> --}}
                 </div>
-                <div class="card-body p-2 overflow-auto" style="max-height: 150px ">
+                <div class="card-body p-2">
                     <ul class="list-group">
-                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center"
-                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                            title="
-                                        @foreach ($newClient->where('register_as', 'student') as $newStudent)
-                                            <p>
-                                                <b>{{ $newStudent->client->full_name }}</b> From {{ $newStudent->client->school->sch_name ?? '' }}
-                                            </p> @endforeach">
+                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
                             <div class="">Student</div>
-                            <span
-                                class="badge badge-info">{{ $newClient->where('register_as', 'student')->count() }}</span>
+                            <span class="badge badge-info"></span>
+                            <div class="dropdown">
+                                <span class="badge badge-info dropdown-toggle" data-bs-toggle="dropdown">
+                                    {{ $newClient->where('register_as', 'student')->count() }}
+                                </span>
+                                <div class="dropdown-menu overflow-auto text-center px-2"
+                                    style="max-width: 450px; max-height:200px;">
+                                    {{ $newClient->where('register_as', 'student')->count() > 0 ? '' : 'There is no data.' }}
+                                    <table class="table table-striped table-hover">
+                                        @foreach ($newClient->where('register_as', 'student') as $item)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ $item->client->full_name }}</td>
+                                                <td>{{ $item->client->school->sch_name ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            </div>
                         </li>
-                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center"
-                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                            title="
-                                        @foreach ($newClient->where('register_as', 'parent') as $newParent)
-                                            <p>
-                                                <b>{{ $newParent->client->full_name }}</b> 
-                                            </p> @endforeach">
+                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
                             <div class="">Parent</div>
-                            <span class="badge badge-info">{{ $newClient->where('register_as', 'parent')->count() }}</span>
+                            <div class="dropdown">
+                                <span class="badge badge-info dropdown-toggle" data-bs-toggle="dropdown">
+                                    {{ $newClient->where('register_as', 'parent')->count() }}
+                                </span>
+                                <div class="dropdown-menu overflow-auto text-center px-2"
+                                    style="max-width: 450px; max-height:200px;">
+                                    {{ $newClient->where('register_as', 'parent')->count() > 0 ? '' : 'There is no data.' }}
+                                    <table class="table table-striped table-hover">
+                                        @foreach ($newClient->where('register_as', 'parent') as $item)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ $item->client->full_name }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            </div>
                         </li>
-                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center"
-                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                            title="
-                                        @foreach ($newClient->where('register_as', 'teacher/counselor') as $newTeacher)
-                                            <p>
-                                                <b>{{ $newTeacher->client->full_name }}</b> From {{ $newTeacher->client->school->sch_name ?? '' }}
-                                            </p> @endforeach">
+                        <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
                             <div class="">Teacher / Counselor</div>
-                            <span
-                                class="badge badge-info">{{ $newClient->where('register_as', 'teacher/counselor')->count() }}</span>
+                            <div class="dropdown">
+                                <span class="badge badge-info dropdown-toggle" data-bs-toggle="dropdown">
+                                    {{ $newClient->where('register_as', 'teacher/counselor')->count() }}
+                                </span>
+                                <div class="dropdown-menu overflow-auto text-center px-2"
+                                    style="max-width: 450px; max-height:200px;">
+                                    {{ $newClient->where('register_as', 'teacher/counselor')->count() > 0 ? '' : 'There is no data.' }}
+                                    <table class="table table-striped table-hover">
+                                        @foreach ($newClient->where('register_as', 'teacher/counselor') as $item)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ $item->client->full_name }}</td>
+                                                <td>{{ $item->client->school->sch_name ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            </div>
                         </li>
 
                     </ul>
@@ -136,7 +195,7 @@
                 <div class="card-header  d-flex justify-content-between align-items-center">
                     <h6 class="p-0 m-0">Lead Source</h6>
                 </div>
-                <div class="card-body p-2 overflow-auto" style="max-height: 150px ">
+                <div class="card-body p-2">
                     <ul class="list-group">
                         @forelse ($conversionLeads as $conversionLead)
                             <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
@@ -228,14 +287,15 @@
                             <tr>
                                 <th class="bg-info text-white">Event ID</th>
                                 <th class="bg-info text-white">Client Name</th>
-                                <th>Parent Name</th>
-                                <th>Parent Mail</th>
-                                <th>Parent Phone</th>
+                                {{-- <th>Parent Mail</th>
+                                    <th>Parent Phone</th> --}}
                                 <th>Email</th>
                                 <th>Phone Number</th>
+                                <th>Child Name</th>
                                 <th>School Name</th>
                                 <th>Grade</th>
                                 <th>Graduation Year</th>
+                                <th>Country of Study Abroad</th>
                                 <th>Lead Source</th>
                                 <th class="bg-info text-white">Joined At</th>
                             </tr>
@@ -306,20 +366,10 @@
                         name: 'client.full_name',
                         defaultContent: '-',
                     },
-                    {
-                        data: 'parent_name',
-                        defaultContent: '-',
-                    },
-                    {
-                        data: 'parent_mail',
-                        name: 'parent.mail',
-                        defaultContent: '-',
-                    },
-                    {
-                        data: 'parent_phone',
-                        name: 'parent.phone',
-                        defaultContent: '-',
-                    },
+                    // {
+                    //     data: 'parent_name',
+                    //     defaultContent: '-',
+                    // },
                     {
                         data: 'mail',
                         name: 'client.mail',
@@ -331,18 +381,28 @@
                         defaultContent: '-',
                     },
                     {
+                        data: 'child_name',
+                        name: 'child_name',
+                        defaultContent: '-',
+                    },
+                    {
                         data: 'school_name',
-                        name: 'client.school_name',
+                        name: 'school_name',
                         defaultContent: '-',
                     },
                     {
                         data: 'grade_now',
-                        name: 'client.grade_now',
+                        name: 'grade_now',
                         defaultContent: '-',
                     },
                     {
-                        data: 'graduation_year_real',
-                        name: 'client.graduation_year_real',
+                        data: 'graduation_year',
+                        name: 'graduation_year',
+                        defaultContent: '-',
+                    },
+                    {
+                        data: 'abr_country',
+                        name: 'client.abr_country',
                         defaultContent: '-',
                     },
                     {
@@ -356,7 +416,7 @@
                     },
                 ]
             });
-            
+
             // realtimeData(table)
 
         });
