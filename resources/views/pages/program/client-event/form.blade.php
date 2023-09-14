@@ -13,12 +13,14 @@
                     <img src="{{ asset('img/program.webp') }}" alt="" class="w-75">
                     @if (isset($clientEvent))
                         <div class="mt-3 d-flex flex-column justify-content-center">
-                            <div class="mb-2">
-                                <a href="{{ url($clientEvent->client->roles[0]->role_name == 'Parent' ? 'client/parent/' . $clientEvent->client->id : 'client/student/' . $clientEvent->client->id . '/program/create') }}"
-                                    class="btn btn-sm btn-outline-info rounded mx-1">
-                                    <i class="bi bi-plus"></i> {{ $clientEvent->client->roles[0]->role_name == 'Student' ? 'Add Program' : 'Detail Parent'}}
-                                </a>
-                            </div>
+                            @if($clientEvent->client->roles[0]->role_name != 'Teacher/Counselor')
+                                <div class="mb-2">
+                                    <a href="{{ url($clientEvent->client->roles[0]->role_name == 'Parent' ? 'client/parent/' . $clientEvent->client->id : 'client/student/' . $clientEvent->client->id . '/program/create') }}"
+                                        class="btn btn-sm btn-outline-info rounded mx-1">
+                                        <i class="bi bi-plus"></i> {{ $clientEvent->client->roles[0]->role_name == 'Student' ? 'Add Program' : 'Detail Parent'}}
+                                    </a>
+                                </div>
+                            @endif
                             <div>
                                 @if (isset($edit))
                                     <a href="{{ url('program/event/' . $clientEvent->clientevent_id) }}"
@@ -417,7 +419,7 @@
                             <div class="col-md-6 mb-2">
                                 <label>Joined Date <sup class="text-danger">*</sup></label>
                                 <input type="date" name="joined_date"
-                                    value="{{ isset($clientEvent) ? $clientEvent->joined_date : date('Y-m-d') }}"
+                                    value="{{ isset($clientEvent) ? date('Y-m-d', strtotime($clientEvent->joined_date)) : date('Y-m-d') }}"
                                     class="form-control form-control-sm rounded"
                                     {{ empty($clientEvent) || isset($edit) ? '' : 'disabled' }}>
                                 @error('joined_date')

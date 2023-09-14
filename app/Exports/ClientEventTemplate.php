@@ -153,7 +153,7 @@ class ClientEventTemplate implements WithHeadings, WithEvents, WithStrictNullCom
                 $validation->setFormula1(sprintf('"%s"', implode(',', $audience_options)));
 
                 // set dropdown list for first data row
-                $validation = $event->sheet->getCell("K2")->getDataValidation();
+                $validation = $event->sheet->getCell("J2")->getDataValidation();
                 $validation->setType(DataValidation::TYPE_LIST);
                 $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
                 $validation->setAllowBlank(false);
@@ -271,11 +271,12 @@ class ClientEventTemplate implements WithHeadings, WithEvents, WithStrictNullCom
                 $event->sheet->getDelegate()->getComment('D1')->getText()->createTextRun('Required');
                 $event->sheet->getDelegate()->getComment('E1')->getText()->createTextRun('Required');
                 $event->sheet->getDelegate()->getComment('F1')->getText()->createTextRun('Required');
-                // $event->sheet->getDelegate()->getComment('G1')->getText()->createTextRun('Required');
+                $event->sheet->getDelegate()->getComment('G1')->getText()->createTextRun('Required if audience is Parent or Student');
                 // $event->sheet->getDelegate()->getComment('H1')->getText()->createTextRun('Required');
                 // $event->sheet->getDelegate()->getComment('I1')->getText()->createTextRun('Required');
+                $event->sheet->getDelegate()->getComment('J1')->getText()->createTextRun('Required');
                 $event->sheet->getDelegate()->getComment('K1')->getText()->createTextRun('Required');
-                $event->sheet->getDelegate()->getComment('L1')->getText()->createTextRun('Required');
+                $event->sheet->getDelegate()->getComment('L1')->getText()->createTextRun('Required if audience is Parent or Student');
                 $event->sheet->getDelegate()->getComment('M1')->getText()->createTextRun('Required');
                 $event->sheet->getDelegate()->getComment('N1')->getText()->createTextRun('Required if lead source All-In Partners');
                 $event->sheet->getDelegate()->getComment('O1')->getText()->createTextRun('Required if lead source External Edufair');
@@ -308,11 +309,12 @@ class ClientEventTemplate implements WithHeadings, WithEvents, WithStrictNullCom
         $sheet->getStyle('D1')->getFont()->getColor()->setARGB('FF0000');
         $sheet->getStyle('E1')->getFont()->getColor()->setARGB('FF0000');
         $sheet->getStyle('F1')->getFont()->getColor()->setARGB('FF0000');
-        // $sheet->getStyle('G1')->getFont()->getColor()->setARGB('FF0000');
+        $sheet->getStyle('G1')->getFont()->getColor()->setARGB('f0a318');
         // $sheet->getStyle('H1')->getFont()->getColor()->setARGB('FF0000');
         // $sheet->getStyle('I1')->getFont()->getColor()->setARGB('FF0000');
+        $sheet->getStyle('J1')->getFont()->getColor()->setARGB('FF0000');
         $sheet->getStyle('K1')->getFont()->getColor()->setARGB('FF0000');
-        $sheet->getStyle('L1')->getFont()->getColor()->setARGB('FF0000');
+        $sheet->getStyle('L1')->getFont()->getColor()->setARGB('f0a318');
         $sheet->getStyle('M1')->getFont()->getColor()->setARGB('FF0000');
         // $sheet->getStyle('L1')->getFont()->getColor()->setARGB('f0a318');
         $sheet->getStyle('N1')->getFont()->getColor()->setARGB('f0a318');

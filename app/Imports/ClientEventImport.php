@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Http\Traits\CheckExistingClient;
+use App\Http\Traits\CheckExistingClientImport;
 use App\Models\ClientEvent;
 use App\Models\Corporate;
 use App\Models\EdufLead;
@@ -43,7 +43,7 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
     use Importable;
     use StandardizePhoneNumberTrait;
     use CreateCustomPrimaryKeyTrait;
-    use CheckExistingClient;
+    use CheckExistingClientImport;
 
     public function collection(Collection $rows)
     {
@@ -55,18 +55,15 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
 
             foreach ($rows as $row) {
 
-                $existClient = ['isExist' => false];
-
                 $phone = $this->setPhoneNumber($row['phone_number']);
 
-                // Check existing client 
-                $existClient = $this->checkExistingClient($phone, $row['email']);
 
                 // Check existing school
                 $school = School::where('sch_name', $row['school'])->get()->pluck('sch_id')->first();
 
                 $status = $row['status'] == 'Join' ? 0 : 1;
 
+                $newSchool = null;
                 if (!isset($school)) {
                     $newSchool = $this->createSchoolIfNotExists($row['school']);
                 }
@@ -155,6 +152,7 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
                 }
  
                 $createdMainClient = $this->createClient($row, 'main', $row['audience'], $majorDetails, $destinationCountryDetails, $school, $newSchool);
+                Log::info('id' . $createdMainClient);
                 $createdSubClient = $row['audience'] == 'Student' || $row['audience'] == 'Parent' ? $this->createClient($row, 'sub', $roleSub, $majorDetails, $destinationCountryDetails, $school, $newSchool) : null;
 
                 // Create relation parent and student
@@ -172,62 +170,15 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
                     }
                 }
 
-                //  insert new client
-                // if (!$existClient['isExist']) {
-                //     $roleId = Role::whereRaw('LOWER(role_name) = (?)', [strtolower($row['audience'])])->first();
-
-                //     $fullname = explode(' ', $row['name']);
-                //     $limit = count($fullname);
-
-                //     $firstname = $lastname = null;
-                //     if ($limit > 1) {
-                //         $lastname = $fullname[$limit - 1];
-                //         unset($fullname[$limit - 1]);
-                //         $firstname = implode(" ", $fullname);
-                //     } else {
-                //         $firstname = implode(" ", $fullname);
-                //     }
-
-                //     $studentId = null;
-
-                //     if ($row['class_of'] != null || $row['class_of'] != '') {
-                //         $st_grade = 12 - ($row['class_of'] - date('Y'));
-                //     }
-
-                //     $dataClient = [
-                //         'sch_id' => isset($school) ? $school : $newSchool->sch_id,
-                //         'st_id' => isset($studentId) ? $studentId : null,
-                //         'last_name' => $lastname,
-                //         'first_name' => $firstname,
-                //         'mail' => isset($row['email']) && $row['email'] != '' ? $row['email'] : null,
-                //         'phone' => $phone,
-                //         'graduation_year' => $row['class_of'] != null || $row['class_of'] != '' ? $row['class_of'] : null,
-                //         'st_grade' => $row['class_of'] != null || $row['class_of'] != '' ? $st_grade : null,
-                //     ];
-
-                //     if (!$newClient = UserClient::create($dataClient)) {
-                //         throw new Exception('Failed to store new client');
-                //         Log::error('Failed to store new client');
-                //     } else {
-                //         $thisNewClient = UserClient::find($newClient->id);
-
-                //         $thisNewClient->roles()->attach($roleId);
-                //         isset($majorDetails) ? $thisNewClient->interestMajor()->sync($majorDetails) : '';
-                //         isset($destinationCountryDetails) ? $thisNewClient->destinationCountries()->sync($destinationCountryDetails) : null;
-                //     }
-                // } else {
-                //     // Exist client
-                //     $existClientStudent = UserClient::find($existClient['id']);
-                //     isset($majorDetails) ? $existClientStudent->interestMajor()->sync($majorDetails) : '';
-                //     isset($destinationCountryDetails) ? $existClientStudent->destinationCountries()->sync($destinationCountryDetails) : null;
-                // }
-
                 // Insert client event
                 $data = [
                     'event_id' => $row['event_name'],
                     'joined_date' => isset($row['date']) ? $row['date'] : null,
                     'client_id' => $createdMainClient,
+                    'child_id' => $row['audience'] == 'Parent' && isset($createdSubClient) ? $createdSubClient : null,
+                    'parent_id' => $row['audience'] == 'Student' && isset($createdSubClient) ? $createdSubClient : null,
                     'lead_id' => $row['lead'],
+                    'notes' => isset($row['notes']) ? $row['notes'] : null,
                     'status' => $status,
                     'registration_type' => isset($row['registration_type']) ? $row['registration_type'] : null,
                     'number_of_attend' => isset($row['number_of_attend']) ? $row['number_of_attend'] : 1,
@@ -254,7 +205,6 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
 
     public function prepareForValidation($data)
     {
-
         DB::beginTransaction();
         try {
 
@@ -306,10 +256,12 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
             'kol' => isset($kol) ? $kol : $data['kol'],
             'itended_major' => $data['itended_major'],
             'destination_country' => $data['destination_country'],
+            'registration_type' => $data['registration_type'],
             'number_of_attend' => $data['number_of_attend'],
             'referral_code' => $data['referral_code'],
             'reason_join' => $data['reason_join'],
             'expectation_join' => $data['expectation_join'],
+            'notes' => $data['notes'],
             'status' => $data['status'],
         ];
 
@@ -325,14 +277,14 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
             '*.name' => ['required'],
             '*.email' => ['required', 'email'],
             '*.phone_number' => ['required'],
-            '*.child_parent_name' => ['nullable'],
+            '*.child_parent_name' => ['required_unless:audience,Teacher'],
             '*.child_parent_email' => ['nullable'],
             '*.child_parent_phone_number' => ['nullable'],
             '*.registration_type' => ['nullable', 'in:PR,OTS'],
             // '*.existing_new_leads' => ['required', 'in:Existing,New'],
             // '*.mentee_non_mentee' => ['required', 'in:Mentee,Non-mentee'],
             '*.school' => ['required'],
-            '*.class_of' => ['nullable', 'integer'],
+            '*.class_of' => ['required_unless:audience,Teacher', 'nullable', 'integer'],
             '*.lead' => ['required'],
             // '*.event' => ['required_if:lead,LS003', 'nullable', 'exists:tbl_events,event_id'],
             '*.partner' => ['required_if:lead,LS010', 'nullable', 'exists:tbl_corp,corp_id'],
@@ -344,6 +296,7 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
             '*.referral_code' => ['nullable'],
             '*.reason_join' => ['nullable'],
             '*.expectation_join' => ['nullable'],
+            '*.status' => ['nullable'],
             '*.status' => ['required', 'in:Join,Attend'],
         ];
     }
@@ -370,7 +323,7 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
 
     private function createClient($row, $type, $role, $majorDetails, $destinationCountryDetails, $school, $newSchool)
     {
-
+  
         DB::beginTransaction();
         try {
             $clientId = '';
@@ -378,14 +331,15 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
             switch ($type) {
                 case 'main':
                     $phone = $this->setPhoneNumber($row['phone_number']);
-                    $existClient = $this->checkExistingClient($phone, $row['email']);
+                    $email = $row['email'];
+                    $existClient = $this->checkExistingClientImport($phone, $row['email']);
                     $fullname = explode(' ', $row['name']);
                     break;
 
                 case 'sub':
                     $phone = isset($row['child_parent_phone_number']) ? $this->setPhoneNumber($row['phone_number']) : null;
                     $email = isset($row['child_parent_email']) ? $row['child_parent_email'] : null;
-                    $existClient = $this->checkExistingClient($phone, $email);
+                    $existClient = $this->checkExistingClientImport($phone, $email);
                     $fullname = explode(' ', $row['child_parent_name']);
                     break;
             }
@@ -401,7 +355,7 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
                 $firstname = implode(" ", $fullname);
             }
 
-            $roleId = Role::whereRaw('LOWER(role_name) = (?)', [strtolower($role)])->first();
+            $roleId = Role::whereRaw('LOWER(role_name) = (?)', [$role == 'Teacher' ? 'teacher/counselor' : strtolower($role)])->first();
 
             switch ($role) {
                 case 'Student':
@@ -418,7 +372,7 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
                             'st_id' => isset($studentId) ? $studentId : null,
                             'last_name' => $lastname,
                             'first_name' => $firstname,
-                            'mail' => isset($row['email']) && $row['email'] != '' ? $row['email'] : null,
+                            'mail' => $email,
                             'phone' => $phone,
                             'graduation_year' => $row['class_of'] != null || $row['class_of'] != '' ? $row['class_of'] : null,
                             'st_grade' => $row['class_of'] != null || $row['class_of'] != '' ? $st_grade : null,
@@ -480,8 +434,9 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation
                             'first_name' => $firstname,
                             'mail' => $email,
                             'phone' => $phone,
-                            'register_as' => $row['audience']
+                            'register_as' => 'teacher/counsellor'
                         ];
+
             
                         if (!$newClient = UserClient::create($dataClient)) {
                             throw new Exception('Failed to store new client');
