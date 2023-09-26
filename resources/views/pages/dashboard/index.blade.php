@@ -36,13 +36,13 @@
     @includeWhen($isAdmin || $isSales, 'pages.dashboard.sales.index')
 
     {{-- Partnership --}}
-    @includeWhen($isAdmin || $isPartnership, 'pages.dashboard.partnership.index')
+    {{-- @includeWhen($isAdmin || $isPartnership, 'pages.dashboard.partnership.index') --}}
 
     {{-- Digital  --}}
-    @includeWhen($isAdmin || $isDigital, 'pages.dashboard.digital.index')
+    {{-- @includeWhen($isAdmin || $isDigital, 'pages.dashboard.digital.index') --}}
 
     {{-- Finance  --}}
-    @includeWhen($isAdmin || $isFinance, 'pages.dashboard.finance.index')
+    {{-- @includeWhen($isAdmin || $isFinance, 'pages.dashboard.finance.index') --}}
 
 @endsection
 
