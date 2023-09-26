@@ -1,6 +1,10 @@
 @extends('app')
-@section('title', 'Scanner')
-@section('style')
+@section('title', 'STEM+ WONDERLAB SCANNER')
+@section('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/css/intlTelInput.css">
+@endsection
+@push('styles')
     <style>
         @layer base {
 
@@ -9,6 +13,16 @@
                 -webkit-appearance: none;
                 margin: 0;
             }
+        }
+
+        @font-face {
+            font-family: 'nulshock';
+            src: url('/img/makerspace/font/nulshock-bd.otf');
+            font-display: swap;
+        }
+
+        h2 {
+            font-family: 'nulshock' !important;
         }
 
         #html5-qrcode-button-camera-stop {
@@ -39,22 +53,66 @@
         #reader__scan_region img {
             width: 25%;
         }
+
+        .bg-eduall {
+            background: #0C0F38 !important;
+        }
+
+        .btn-eduall {
+            background: #0C0F38 !important;
+            color: #FFFFFF
+        }
+
+        .btn-eduall:hover {
+            background: #0e124a !important;
+            color: #FFFFFF
+        }
+
+        .btn-eduall:active {
+            background: #ff6708 !important;
+            color: #FFFFFF !important;
+        }
+
+        .iti {
+            width: 100% !important;
+        }
     </style>
-@endsection
+@endpush
 @section('body')
     <section>
         <div class="container-fluid">
+            <a href="{{url('registration')}}" class="btn btn-sm btn-secondary position-absolute" style="z-index: 999; top:10px; right:30px;">
+                <i class="bi bi-house me-1"></i> Home
+            </a>
             <div class="row align-items-stretch">
-                <div class="col-8 px-5" style="height: 100vh; background:#233469;">
+                <div class="col-8 px-5 position-relative overflow-hidden bg-eduall" style="height: 100vh;">
+                    <img src="{{ asset('img/makerspace/asset-1.webp') }}" alt=""
+                        class="position-absolute w-25 animate__animated animate__pulse animate__infinite"
+                        style="top:-2vh; left:-10vh; --animate-duration:10s">
+                    <img src="{{ asset('img/makerspace/asset-2.webp') }}" alt=""
+                        class="position-absolute w-25 animate__animated animate__pulse animate__infinite"
+                        style="bottom:-7vh; left:-10vh; --animate-duration:10s">
+                    <img src="{{ asset('img/makerspace/asset-3.webp') }}" alt=""
+                        class="position-absolute w-25 animate__animated animate__pulse animate__infinite"
+                        style="top:-7vh; right:-10vh; --animate-duration:10s">
+                    <img src="{{ asset('img/makerspace/asset-4.webp') }}" alt=""
+                        class="position-absolute w-25 animate__animated animate__pulse animate__infinite"
+                        style="bottom:-7vh; right:-10vh; --animate-duration:10s">
+
                     <div class="d-flex align-items-center h-100">
-                        <div class="text-white">
-                            <h1>Test</h1>
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <img src="{{ asset('img/makerspace/stem-logo-white.webp') }}" alt="" class="w-100">
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-4 px-5">
                     <div class="d-flex align-items-center h-100">
                         <div class="w-100">
+                            <div class="text-center mb-3">
+                                <h2>SCAN YOUR <br> QR-CODE HERE</h2>
+                            </div>
                             <div id="reading" class="card text-center shadow d-none">
                                 <div class="card-body">
                                     <img width="100"
@@ -65,7 +123,22 @@
                                     </div>
                                 </div>
                             </div>
-                            <div id="reader" class="rounded shadow p-3"></div>
+                            <div id="reader" class="rounded-4 shadow-lg p-3 border-0"></div>
+                            <div class="text-center my-3">
+                                <h5>OR <br> WITH PHONE NUMBER</h2>
+                            </div>
+                            <div class="card shadow border-0" style="background: #FFFFFF !important; opacity:1;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center gap-2">
+                                        <input type="tel" name="" class="form-control" id="phoneNumber">
+                                        <input type="hidden" name="" class="form-control" id="phone1">
+                                        <button class="btn btn-sm btn-eduall border-1 p-2 px-3 border-0"
+                                            onclick="checkPhone()">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -75,13 +148,13 @@
 
     <div class="modal fade modal-lg" tabindex="-1" id="clientDetail">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content  rounded-5">
                 <div class="modal-header">
                     <h5 class="modal-title">Confirmation</h5>
                     <button type="button" class="btn-close" onclick="closeModal()"></button>
                 </div>
                 <div class="modal-body">
-                    <iframe src="" frameborder="0" width="100%" height="360" id="client-detail-ctx"></iframe>
+                    <iframe src="" frameborder="0" width="100%" height="400" id="client-detail-ctx"></iframe>
                 </div>
             </div>
         </div>
@@ -90,15 +163,46 @@
 
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/intlTelInput.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
     <script>
+        var phone = document.querySelector("#phoneNumber");
+
+        const phoneInput1 = window.intlTelInput(phone, {
+            utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js",
+            initialCountry: 'id',
+            onlyCountries: ["id", "us", "gb", "sg", "au", "my"],
+        });
+
+        $("#phoneNumber").on('keyup', function(e) {
+            var number = phoneInput1.getNumber();
+            $("#phone1").val(number);
+        });
+
         $(function() {
             $("#client-detail-ctx").on('load', function() {
                 $('#clientDetail').modal('show');
                 swal.close();
-
             });
         })
+
+        function checkPhone() {
+            var phone = $("#phone1");
+
+            if (phone.val() != "") {
+                showLoading();
+
+                const identifier = phone.val();
+                let source = "{{ url('client-detail') }}/" + identifier + "/phone";
+
+                var iframe = $("#client-detail-ctx")
+                iframe.attr('src', source)
+            } else {
+                $("#phoneNumber").focus()
+            }
+        }
+
         function closeModal() {
             $('#clientDetail').modal('hide')
             $('#reading').addClass('d-none')
@@ -114,7 +218,7 @@
             const maxIndexes = arrSegments.length - 1;
 
             const identifier = arrSegments[maxIndexes];
-            let source = "{{ url('client-detail') }}/" + identifier;
+            let source = "{{ url('client-detail') }}/" + identifier + "/qr";
             // console.log(source)
 
             var iframe = $("#client-detail-ctx")
@@ -142,8 +246,7 @@
             });
         html5QrcodeScanner.render(onScanSuccess);
 
-        function submitUpdate()
-        {
+        function submitUpdate() {
             window.location.reload();
         }
     </script>

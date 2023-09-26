@@ -27,6 +27,7 @@ class ClientEventRepository implements ClientEventRepositoryInterface
                     // 'tbl_client_event.event_id',
                     // 'tbl_client_event.eduf_id',
                     'tbl_events.event_title as event_name',
+                    'tbl_client_event.notes',
                     'client.register_as',
                     'client.full_name as client_name',
                     'client.mail as client_mail',
@@ -51,6 +52,7 @@ class ClientEventRepository implements ClientEventRepositoryInterface
                     'tbl_client_event.joined_date',
                     'tbl_client_event.status',
                     'tbl_client_event.created_at',
+                    'tbl_client_event.number_of_attend as number_of_party',
                     'client.created_at as client_created_at',
                     DB::raw('(CASE
                         WHEN tbl_lead.main_lead = "KOL" THEN CONCAT(tbl_lead.sub_lead)
