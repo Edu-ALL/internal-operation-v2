@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\StandardizePhoneNumberTrait;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str; 
 
 class ClientRepository implements ClientRepositoryInterface
@@ -205,8 +206,10 @@ class ClientRepository implements ClientRepositoryInterface
 
     public function getNewLeads($asDatatables = false, $month = null, $advanced_filter = [])
     {
-        # new client that havent offering our program
-        $query = Client::doesntHave('clientProgram')->when($month, function ($subQuery) use ($month) {
+        // return Cache::remember('new_leads', now()->addHour(), function () use ($asDatatables, $month, $advanced_filter) {
+
+            # new client that havent offering our program
+            $query = Client::doesntHave('clientProgram')->when($month, function ($subQuery) use ($month) {
                 $subQuery->whereMonth('created_at', date('m', strtotime($month)))->whereYear('created_at', date('Y', strtotime($month)));
             })->
             whereHas('roles', function ($subQuery) {
@@ -232,7 +235,9 @@ class ClientRepository implements ClientRepositoryInterface
             })->
             where('st_statusact', 1);
 
-        return $asDatatables === false ? $query->orderBy('created_at', 'desc')->get() : $query;
+            return $asDatatables === false ? $query->orderBy('created_at', 'desc')->get() : $query;
+        // });
+
     }
 
     public function getPotentialClients($asDatatables = false, $month = null, $advanced_filter = [])
