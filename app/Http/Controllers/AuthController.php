@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\LoggerModuleEnum;
+use App\Enums\LogTypeEnum;
+use App\Http\Traits\LoggingTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Interfaces\MenuRepositoryInterface;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
 class AuthController extends Controller
 {
+    use LoggingTrait;
     private MenuRepositoryInterface $menuRepository;
 
     public function __construct(MenuRepositoryInterface $menuRepository)
@@ -28,19 +34,30 @@ class AuthController extends Controller
         # check credentials
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+
+            $logDetails = [
+                'user' => $user,
+            ];
             
-            if (!$user_type = $user->user_type->first()) {
+            # checking the user type if the user still has contract permissions with eduALL
+            if (!$user_type = $user->user_type->where('tbl_user_type_detail.status', 1)->first()) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
+
+                $this->logAlert(LoggerModuleEnum::Auth, $logDetails);
+
                 return back()->withErrors([
                     'password' => 'You don\'t have permission to login. If this problem persists, please contact our administrator.'
                 ]);
             }
 
             if ($user_type->type_name != 'Full-Time' && ($user_type->pivot->end_date <= Carbon::now()->toDateString())) {
+
+                $this->logAlert(LoggerModuleEnum::Auth, $logDetails);
+
                 return back()->withErrors([
-                    'password' => 'Your access is expired',
+                    'password' => 'Your don\'t have permission to login. If this problem persists, please contact our administrator.',
                 ]);
             }
 

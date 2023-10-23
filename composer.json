@@ -22,8 +22,10 @@
         "lwwcas/laravel-countries": "^3.3",
         "maatwebsite/excel": "^3.1",
         "psr/simple-cache": "^2.0",
+        "rappasoft/laravel-authentication-log": "^2.0",
         "riskihajar/terbilang": "^2.0",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "torann/geoip": "^3.0",
         "yajra/laravel-datatables-oracle": "10.0"
     },
     "require-dev": {
