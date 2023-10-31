@@ -39,7 +39,9 @@ class AuthController extends Controller
                 'user' => $user,
             ];
             
-            # checking the user type if the user still has contract permissions with eduALL
+            # checking the user type 
+            # if the user still has contract permissions with eduALL
+            # if no then kick them to login page
             if (!$user_type = $user->user_type->where('tbl_user_type_detail.status', 1)->first()) {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -52,6 +54,10 @@ class AuthController extends Controller
                 ]);
             }
 
+            # if the user still has contract access with eduALL
+            # then check if the contract access is full-time or part-time
+            # when the type name is part-time then check if the date they're login is still on the contract date
+            # if no then kik them to login page
             if ($user_type->type_name != 'Full-Time' && ($user_type->pivot->end_date <= Carbon::now()->toDateString())) {
 
                 $this->logAlert(LoggerModuleEnum::Auth, $logDetails);
