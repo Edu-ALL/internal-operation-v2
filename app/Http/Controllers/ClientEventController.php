@@ -536,19 +536,19 @@ class ClientEventController extends Controller
 
     public function createFormEmbed(Request $request)
     {
-        if ($request->get('event_name') == null) {
-            abort(404);
-        }
+        // if ($request->get('event_name') == null) {
+        //     abort(404);
+        // }
         $leads = $this->leadRepository->getLeadForFormEmbedEvent();
         $schools = $this->schoolRepository->getAllSchools();
 
-        $requested_event_name = str_replace('&quot;', '"', $request->event_name);
-        if (!$event = $this->eventRepository->getEventByName(urldecode($requested_event_name)))
+        $requested_event_name = str_replace('&quot;', '"', 'STEM%20Wonderlab%20Registration%20Form');
+        if (!$event = $this->eventRepository->getEventByName(urldecode('STEM%20Wonderlab%20Registration%20Form')))
             abort(404);
 
         $tags = $this->tagRepository->getAllTags();
 
-        return view('form-embed.form-events')->with(
+        return view('form-embed.form-events-v2')->with(
             [
                 'leads' => $leads,
                 'schools' => $schools,

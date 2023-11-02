@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientEventController;
 use App\Http\Controllers\ClientProgramController;
 use App\Http\Controllers\ClientStudentController;
 use App\Http\Controllers\VolunteerController;
+use App\Livewire\FormEmbed\ClientEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +53,7 @@ Route::resource('user/volunteer', VolunteerController::class);
 //     return view('form-embed.form-event');
 // });
 Route::get('form/event', [ClientEventController::class, 'createFormEmbed'])->name('form.event.create');
+// Route::get('form/event', ClientEvents::class)->name('form.event.create');
 Route::post('form/events', [ClientEventController::class, 'storeFormEmbed'])->name('form.event.store');
 
 // Route::get('form/event/{event_slug}/client/attend/{clientevent}', [ClientEventController::class, 'handlerScanQrCodeForAttend'])->name('link-event-attend');
