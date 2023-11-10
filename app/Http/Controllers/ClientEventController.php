@@ -706,7 +706,7 @@ class ClientEventController extends Controller
 
         # store Success
         # create log success
-        $this->logSuccess('store', 'Form Embed', 'Client Event', 'Guest', $clientEvent);
+        // $this->logSuccess('store', 'Form Embed', 'Client Event', 'Guest', $clientEvent);
 
         
         # if they regist on the spot then should return view success
