@@ -63,14 +63,14 @@
             <div class="navbar-menu-wrapper d-flex align-items-top border-bottom">
                 <ul class="navbar-nav">
                     <li class="nav-item font-weight-semibold d-none d-lg-block ms-0">
-                        <h1 class="welcome-text">Welcome Back, <span
+                        {{-- <h1 class="welcome-text">Welcome Back, <span
                                 class="text-black fw-bold">{{ Auth::user()->first_name }}
-                                {{ Auth::user()->last_name }}</span></h1>
+                                {{ Auth::user()->last_name }}</span></h1> --}}
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
 
-                    @if ($isAdmin || $isSales || $isDigital)
+                    {{-- @if ($isAdmin || $isSales || $isDigital)
                         <li class="nav-item dropdown d-none d-lg-block user-dropdown me-lg-3 me-0">
                             <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
@@ -124,7 +124,7 @@
                             @endif
                         </li>
 
-                    @endif
+                    @endif --}}
                     <li class="nav-item dropdown d-none d-lg-block user-dropdown">
                         <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown"
                             aria-expanded="false">
@@ -133,9 +133,9 @@
                             <div class="dropdown-header text-center">
                                 <img class="img-md rounded-circle w-25" src="{{ asset('img/user.png') }}"
                                     alt="Profile image">
-                                <p class="mb-1 mt-3 font-weight-semibold">{{ Auth::user()->first_name }}
+                                {{-- <p class="mb-1 mt-3 font-weight-semibold">{{ Auth::user()->first_name }}
                                     {{ Auth::user()->last_name }}</p>
-                                <p class="fw-light text-muted mb-0">{{ Auth::user()->email }}</p>
+                                <p class="fw-light text-muted mb-0">{{ Auth::user()->email }}</p> --}}
                             </div>
                             <a class="dropdown-item text-center" href="{{ route('profile.index') }}">
                                 <i class="bi bi-file-lock2 text-primary me-2"></i>
@@ -149,7 +149,7 @@
                     </li>
                 </ul>
                 <div class="dropdown d-block d-lg-none me-3">
-                    @if ($isAdmin || $isSales || $isDigital)
+                    {{-- @if ($isAdmin || $isSales || $isDigital)
                         <a class="" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bell" style="font-size: 2em;"></i>
                             @if (isset($countAlarm))
@@ -189,19 +189,19 @@
                                 @endforeach
                             </ul>
                         @endif
-                    @endif
+                    @endif --}}
                 </div>
                 <div class="dropdown d-block d-lg-none user-dropdown me-0">
                     <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
                         <img class="img-xs rounded-circle" src="{{ asset('img/user.png') }}" alt="Profile image"> </a>
                     <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown"
                         style="left:-150px;">
-                        <div class="dropdown-header text-center">
+                        {{-- <div class="dropdown-header text-center">
                             <img class="img-md rounded-circle w-25" src="{{ asset('img/user.png') }}" alt="Profile image">
                             <p class="mb-1 mt-3 font-weight-semibold">{{ Auth::user()->first_name }}
                                 {{ Auth::user()->last_name }}</p>
                             <p class="fw-light text-muted mb-0">{{ Auth::user()->email }}</p>
-                        </div>
+                        </div> --}}
                         <a class="dropdown-item text-center" href="{{ route('profile.index') }}">
                             <i class="bi bi-file-lock2 text-primary me-2"></i>
                             Change Password
@@ -223,7 +223,7 @@
             <!-- partial:partials/_sidebar.html -->
             <nav class="sidebar sidebar-offcanvas position-md-fixed h-75 overflow-auto pt-3 pe-1" id="sidebar">
                 <ul class="nav">
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <a @class([
                             'nav-link',
                             'bg-secondary text-white' => Request::is('dashboard'),
@@ -231,10 +231,10 @@
                             <i class="bi bi-speedometer2 mx-2"></i>
                             <span class="menu-title">Dashboard</span>
                         </a>
-                    </li>
+                    </li> --}}
                     <li class="nav-item nav-category">Pages</li>
 
-                    @foreach ($menus as $key => $menu)
+                    {{-- @foreach ($menus as $key => $menu)
                         <li class="nav-item">
                             @php
                                 $key = $key == 'Users' ? 'User' : $key;
@@ -275,25 +275,91 @@
                                 </ul>
                             </div>
                         </li>
-                    @endforeach
+                    @endforeach --}}
+                    <li class="nav-item">
+                        <ul class="nav flex-column sub-menu bg-white p-0" style="list-style-type: none;">
 
-                    @if ($isAdmin)
-                        <li class="nav-item">
-                            <a href="{{ url('request-sign?type=invoice') }}"
-                                class="nav-link {{ Request::is('request-sign') ? 'bg-secondary text-white' : '' }}">
-                                <i class="bi bi-pencil mx-2"></i>
-                                <span class="menu-title">Request Sign</span>
-                            </a>
-                        </li>
-                        <li class="nav-item nav-category">Settings</li>
-                        <li class="nav-item">
-                            <a href="{{ url('menus') }}"
-                                class="nav-link {{ Request::is('menus') ? 'bg-secondary text-white' : '' }}">
-                                <i class="bi bi-list mx-2"></i>
-                                <span class="menu-title">Menus</span>
-                            </a>
-                        </li>
-                    @endif
+                            <li class="p-0">
+                                <a class="nav-link py-1 m-0 ps-5 border-bottom rounded-0"
+                                    href="{{ url('client/student?st=potential') }}">
+                                    <i class="bi bi-dash me-2"></i>
+                                    Students
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <ul class="nav flex-column sub-menu bg-white p-0" style="list-style-type: none;">
+
+                            <li class="p-0">
+                                <a class="nav-link py-1 m-0 ps-5 border-bottom rounded-0"
+                                    href="{{ url('client/parent') }}">
+                                    <i class="bi bi-dash me-2"></i>
+                                    Parent
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <ul class="nav flex-column sub-menu bg-white p-0" style="list-style-type: none;">
+
+                            <li class="p-0">
+                                <a class="nav-link py-1 m-0 ps-5 border-bottom rounded-0"
+                                    href="{{ url('client/alumni?st=mentee') }}">
+                                    <i class="bi bi-dash me-2"></i>
+                                    Alumnis
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <ul class="nav flex-column sub-menu bg-white p-0" style="list-style-type: none;">
+
+                            <li class="p-0">
+                                <a class="nav-link py-1 m-0 ps-5 border-bottom rounded-0"
+                                    href="{{ url('client/teacher-counselor') }}">
+                                    <i class="bi bi-dash me-2"></i>
+                                    Teacher/Counselor
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <ul class="nav flex-column sub-menu bg-white p-0" style="list-style-type: none;">
+
+                            <li class="p-0">
+                                <a class="nav-link py-1 m-0 ps-5 border-bottom rounded-0"
+                                    href="{{ url('client/hot-leads?program=Admissions+Mentoring') }}">
+                                    <i class="bi bi-dash me-2"></i>
+                                    Hot Leads
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <ul class="nav flex-column sub-menu bg-white p-0" style="list-style-type: none;">
+
+                            <li class="p-0">
+                                <a class="nav-link py-1 m-0 ps-5 border-bottom rounded-0"
+                                    href="{{ url('program/event') }}">
+                                    <i class="bi bi-dash me-2"></i>
+                                    Client Event
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <ul class="nav flex-column sub-menu bg-white p-0" style="list-style-type: none;">
+
+                            <li class="p-0">
+                                <a class="nav-link py-1 m-0 ps-5 border-bottom rounded-0"
+                                    href="{{ url('report/event') }}">
+                                    <i class="bi bi-dash me-2"></i>
+                                    Report Event Tracking
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
             </nav>
             <!-- partial -->

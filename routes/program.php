@@ -65,7 +65,7 @@ Route::resource('event', ClientEventController::class, [
         'edit' => 'program.event.edit',
         'destroy' => 'program.event.destroy',
     ]
-]);
+])->withoutMiddleware(['auth', 'auth.department']);
 
 Route::post('event/import', [ClientEventController::class, 'import'])->name('program.event.import');
 Route::post('event/{type}/import', [ClientEventController::class, 'mailing'])->name('program.event.mailing');

@@ -25,7 +25,7 @@ Route::get('sales', [SalesTrackingController::class, 'index'])->name('report.sal
 //     return view('pages.report.event-tracking.index');
 // });
 
-Route::get('event', [ReportController::class, 'event'])->name('report.client.event');
+Route::get('event', [ReportController::class, 'event'])->name('report.client.event')->withoutMiddleware(['auth', 'auth.department']);
 
 
 // Route::get('invoice', function () {

@@ -44,7 +44,7 @@ use Illuminate\Support\Facades\Route;
 //     return view('pages.client.student.index-mentee', ['status' => $status]);
 // });
 
-Route::resource('student', ClientStudentController::class);
+Route::resource('student', ClientStudentController::class)->withoutMiddleware(['auth', 'auth.department']);
 Route::prefix('student')->name('student.')->group(function () {
     Route::post('import', [ClientStudentController::class, 'import'])->name('import');
     Route::get('{student}/status/{status}', [ClientStudentController::class, 'updateStatus'])->name('update.status');
@@ -57,23 +57,23 @@ Route::prefix('student')->name('student.')->group(function () {
 
         Route::resource('{program}/followup', FollowupController::class);
     });
-});
+})->withoutMiddleware(['auth', 'auth.department']);
 Route::prefix('alumni')->group(function() {
 
     Route::resource('mentee', ClientMenteeController::class);
     Route::resource('non-mentee', ClientMenteeController::class);
-});
-Route::resource('alumni', ClientMenteeController::class);
+})->withoutMiddleware(['auth', 'auth.department']);
+Route::resource('alumni', ClientMenteeController::class)->withoutMiddleware(['auth', 'auth.department']);
 
-Route::resource('teacher-counselor', ClientTeacherCounselorController::class);
+Route::resource('teacher-counselor', ClientTeacherCounselorController::class)->withoutMiddleware(['auth', 'auth.department']);
 Route::prefix('teacher-counselor')->name('teacher-counselor.')->group(function () {
     Route::post('import', [ClientTeacherCounselorController::class, 'import'])->name('import');
     Route::get('{teacher}/status/{status}', [ClientTeacherCounselorController::class, 'updateStatus'])->name('update.status');
-});
+})->withoutMiddleware(['auth', 'auth.department']);
 
-Route::resource('parent', ClientParentController::class);
-Route::post('parent/import', [ClientParentController::class, 'import'])->name('parent.import');
+Route::resource('parent', ClientParentController::class)->withoutMiddleware(['auth', 'auth.department']);
+Route::post('parent/import', [ClientParentController::class, 'import'])->name('parent.import')->withoutMiddleware(['auth', 'auth.department']);
 
-Route::resource('acceptance', AcceptanceController::class)->parameters(['acceptance' => 'client']);
+Route::resource('acceptance', AcceptanceController::class)->parameters(['acceptance' => 'client'])->withoutMiddleware(['auth', 'auth.department']);
 
-Route::get('hot-leads', [ClientHotLeadsController::class, 'index']);
+Route::get('hot-leads', [ClientHotLeadsController::class, 'index'])->withoutMiddleware(['auth', 'auth.department']);

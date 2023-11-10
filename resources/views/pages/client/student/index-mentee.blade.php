@@ -257,22 +257,6 @@
                 }
             });
 
-            @php
-                $privilage = $menus['Client']->where('submenu_name', 'Alumnis')->first();
-            @endphp
-
-            @if ($privilage['copy'] == 0)
-                document.oncontextmenu = new Function("return false");
-
-                $('body').bind('cut copy paste', function(event) {
-                    event.preventDefault();
-                });
-            @endif
-
-            @if ($privilage['export'] == 0)
-                table.button(1).disable();
-            @endif
-
             $('#clientTable tbody').on('click', '.editClient ', function() {
                 const queryString = window.location.search;
                 const urlParams = new URLSearchParams(queryString);

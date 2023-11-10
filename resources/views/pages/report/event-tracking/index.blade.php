@@ -146,21 +146,7 @@
 
 
     <script>
-        @php
-            $privilage = $menus['Report']->where('submenu_name', 'Event Tracking')->first();
-        @endphp
-        $(document).ready(function() {
-            @if ($privilage['copy'] == 0)
-                document.oncontextmenu = new Function("return false");
 
-                $('body').bind('cut copy paste', function(event) {
-                    event.preventDefault();
-                });
-            @endif
-
-            $('[data-toggle="tooltip"]').tooltip();
-
-        });
 
         $(document).ready(function() {
             // $('#cancel').click(function() {
