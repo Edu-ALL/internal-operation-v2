@@ -25,6 +25,7 @@ class SchoolDetail extends Model
         'schdetail_position',
         'schdetail_phone',
         'is_pic',
+        'sch_id'
     ];
 
     public function school()

@@ -89,6 +89,11 @@ class RouteServiceProvider extends ServiceProvider
                     ->prefix('menus')
                     ->namespace($this->namespace)
                     ->group(base_path('routes/menus.php'));
+
+                Route::middleware('web')
+                    ->prefix('merge')
+                    ->namespace($this->namespace)
+                    ->group(base_path('routes/merge.php'));
             });
 
         });
