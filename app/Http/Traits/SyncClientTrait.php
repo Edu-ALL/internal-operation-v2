@@ -76,6 +76,7 @@ trait SyncClientTrait
     private function checkCountry($arrayCountry)
     {
         $destinationCountryDetails = new Collection();
+        $subCountry = $regionName = null;
      
         foreach ($arrayCountry as $key => $value) {
 
@@ -103,17 +104,17 @@ trait SyncClientTrait
                     $regionName = "Asia";
                     break;
 
+                case preg_match('/japan|jepang/i', $countryName) == 1:
+                    $subCountry = "Japan";
+                    break;
+
                 default:
                     $regionName = "Other";
             }
 
-            $tagFromDB = Tag::where('name', $regionName)->first();
+            $tagFromDB = $subCountry != null ? Tag::where('sub_country', $subCountry) : Tag::where('name', $regionName)->first();
             if (isset($tagFromDB)) {
                 
-                $destinationCountryDetails->push([
-                    'tag_id' => $tagFromDB->id,
-                    'country_name' => $regionName == 'Other' ? $countryName : null,
-                ]);
                 $destinationCountryDetails->push([
                     'tag_id' => $tagFromDB->id,
                     'country_name' => $regionName == 'Other' ? $countryName : null,
@@ -124,10 +125,6 @@ trait SyncClientTrait
                 $destinationCountryDetails->push([
                     'tag_id' => 7,
                     'country_name' => $countryName,
-                ]);
-                $destinationCountryDetails->push([
-                    'tag_id' => 7,
-                    'country_name' => $countryName,                
                 ]);
             }
         }
