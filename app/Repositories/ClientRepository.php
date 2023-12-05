@@ -18,11 +18,14 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Traits\StandardizePhoneNumberTrait;
 use App\Models\ClientAcceptance;
 use App\Models\ClientLeadTracking;
-use App\Models\RawClient;
 use App\Models\University;
 use App\Models\User;
+<<<<<<< HEAD
+use Illuminate\Support\Str; 
+=======
 use App\Models\ViewRawClient;
 use Illuminate\Support\Str;
+>>>>>>> 109439ebcd73a9be836c7e4705e87041ea6286fc
 
 class ClientRepository implements ClientRepositoryInterface
 {
@@ -855,15 +858,6 @@ class ClientRepository implements ClientRepositoryInterface
         })->first();
     }
 
-    public function attachClientRelation($parentId, $studentId)
-    {
-        $student = UserClient::where('id', $studentId)->first();
-
-        $student->parents()->attach($parentId);
-        return $student;
-    }
-
-
     # connecting student with parents
     public function createClientRelation($parentId, $studentId)
     {
@@ -1175,6 +1169,8 @@ class ClientRepository implements ClientRepositoryInterface
         $student->interestPrograms()->wherePivot('id', $interestProgram)->detach($progId);
         return $student;
     }
+<<<<<<< HEAD
+=======
 
     public function getAllRawClientDataTables($roleName)
     {
@@ -1228,4 +1224,5 @@ class ClientRepository implements ClientRepositoryInterface
 
         return UserClient::with($relation)->whereIn('id', $clientIds)->get();
     }
+>>>>>>> 109439ebcd73a9be836c7e4705e87041ea6286fc
 }

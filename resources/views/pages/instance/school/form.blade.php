@@ -33,6 +33,8 @@
                     <h5>
                         {{ isset($school) ? $school->sch_name : 'Add New School' }}
                     </h5>
+<<<<<<< HEAD
+=======
                     @if(isset($school))
                     
                         <p>
@@ -45,6 +47,7 @@
                             </a>
                         </p>
                     @endif
+>>>>>>> 109439ebcd73a9be836c7e4705e87041ea6286fc
                     @if (isset($school))
                         <div class="mt-3 d-flex justify-content-center">
                             @if (isset($edit))

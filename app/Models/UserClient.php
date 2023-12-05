@@ -19,7 +19,7 @@ class UserClient extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'tbl_client';
-    protected $appends = ['lead_source', 'graduation_year_real'];
+    protected $appends = ['lead_source'];
 
     /**
      * The attributes that should be visible in arrays.

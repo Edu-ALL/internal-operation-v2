@@ -56,7 +56,6 @@ interface ClientRepositoryInterface
     public function removeRole($clientId, $role);
     public function getParentsByStudentId($studentId);
     public function getParentByParentName($parentName);
-    public function attachClientRelation($parentId, $studentId);
     public function createClientRelation($parentId, $studentId);
     public function removeClientRelation($parentId, $studentId);
     public function createManyClientRelation($parentId, array $studentId);
