@@ -15,6 +15,7 @@ class Client extends Model
     protected $fillable = [
         'id',
         'st_id',
+        'uuid',
         'first_name',
         'last_name',
         'mail',
@@ -45,8 +46,10 @@ class Client extends Model
         'preferred_program',
         'is_funding',
         'register_as',
+        'is_verified',
         'created_at',
         'updated_at',
+        'deleted_at',
     ];
 
     # attributes

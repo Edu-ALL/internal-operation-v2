@@ -84,7 +84,7 @@
                             <th class="bg-info text-white">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    {{-- <tbody>
                         @for ($i = 0; $i < 10; $i++)
                             <tr>
                                 <td class="dt-control"></td>
@@ -106,7 +106,7 @@
                                 </td>
                             </tr>
                         @endfor
-                    </tbody>
+                    </tbody> --}}
                 </table>
             </div>
         </div>
@@ -118,46 +118,141 @@
         $(document).ready(function() {
 
             // Formatting function for row details - modify as you need
-            function format(d) {
+            function format(d, clientSuggest) {
                 var similar = '<table class="table w-auto table-hover">'
-                similar +=
-                    '<th colspan=6>Comparison with Similar Names:</th>' +
-                    '</tr>' +
-                    '<tr>' +
-                    '<th>#</th><th>Name</th><th>Email</th><th>Phone Number</th><th>Child Name</th>' +
-                    '</tr>';
+                var suggestion = d.suggestion;
+                var arrSuggest = [];
+                if (suggestion !== null && suggestion !== undefined) {
+                    arrSuggest = suggestion.split(',');
+                }
 
-                for (let i = 1; i <= 3; i++) {
-                    similar += '<tr onclick="comparison(' +
-                        1 + ',' + 2 + ')" class="cursor-pointer">' +
-                        '<td><input type="radio" name="similar' + 1 +
-                        '" class="form-check-input item-' + 2 + '" onclick="comparison(' +
-                        1 + ',' + 2 + ')" /></td>' +
-                        '<td>' + 'Name' + '</td>' +
-                        '<td>' + 'Email' + '</td>' +
-                        '<td>' + 'Phone Number' + '</td>' +
-                        '<td>' + 'Child Name' + '</td>' +
+                if(arrSuggest.length > 0){
+                    similar +=
+                        '<th colspan=5>Comparison with Similar Names:</th>' +
+                        '</tr>' +
+                        '<tr>' +
+                        '<th>#</th><th>Name</th><th>Email</th><th>Phone Number</th>' +
+                        '</tr>';
+
+                    clientSuggest.forEach(function(item, index) {
+                        similar += '<tr onclick="comparison(' +
+                        d.id + ',' + item.id + ')" class="cursor-pointer">' +
+                        '<td><input type="radio" name="similar' + d.id +
+                        '" class="form-check-input item-' + item.id + '" onclick="comparison(' +
+                        d.id + ',' + item.id + ')" /></td>' +
+                        '<td>' + item.first_name + ' ' + item.last_name + '</td>' +
+                        '<td>' + (item.mail !== null ? item.mail : '-') + '</td>' +
+                        '<td>' + (item.phone !== null ? item.phone : '-') + '</td>' +
                         '</tr>'
-                };
+                    })
+                }
+
 
                 similar +=
                     '<tr>' +
-                    '<th colspan=6>Convert without Comparison</th>' +
+                    '<th colspan=5>Convert without Comparison</th>' +
                     '</tr>' +
                     '<tr class="cursor-pointer" onclick="newLeads(' +
-                    1 + ')">' +
-                    '<td><input type="radio" name="similar' + 1 +
-                    '" class="form-check-input item-' + 1 + '" onclick="newLeads(' +
-                    1 + ')" /></td>' +
-                    '<td colspan=5>New Student</td>' +
+                    d.id + ')">' +
+                    '<td><input type="radio" name="similar' + d.id +
+                    '" class="form-check-input item-' + d.id + '" onclick="newLeads(' +
+                    d.id + ')" /></td>' +
+                    '<td colspan=4>New Teacher</td>' +
                     '</tr>' +
                     '</table>'
                 // `d` is the original data object for the row
                 return (similar);
             }
 
-            var table = $('#rawTable').DataTable();
-
+            var table = $('#rawTable').DataTable({
+                order: [
+                    // [20, 'desc'],
+                    [1, 'asc']
+                ],
+                dom: 'Bfrtip',
+                buttons: [
+                    'pageLength', {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                    }
+                ],
+                scrollX: true,
+                fixedColumns: {
+                    left: (widthView < 768) ? 1 : 2,
+                    right: 1
+                },
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '',
+                },
+                columns: [{
+                        className: 'dt-control',
+                        orderable: false,
+                        data: null,
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'id',
+                        className: 'text-center',
+                        render: function(data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    {
+                        data: 'fullname',
+                        render: function(data, type, row, meta) {
+                            return data
+                        }
+                    },
+                    {
+                        data: 'suggestion',
+                        className: 'text-center',
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            if (data == undefined && data == null) {
+                                return '-'
+                            } else {
+                                var arraySuggestion = data.split(',');
+                                return '<div class="badge badge-warning py-1 px-2 ms-2">' + arraySuggestion.length + ' Similar Names</div>'
+                            }
+                        }
+                    },
+                    {
+                        data: 'mail',
+                        defaultContent: '-'
+                    },
+                    {
+                        data: 'phone',
+                        defaultContent: '-'
+                    },
+                    {
+                        data: 'school_name',
+                        defaultContent: '-',
+                        render: function(data, type, row, meta) {
+                            if(data != null){
+                                if(row.is_verifiedschool == 'Y'){
+                                    return data + '<div class="badge badge-success py-1 px-2 ms-2">Verified</div>'
+                                }else{
+                                    return data + '<div class="badge badge-danger py-1 px-2 ms-2">Not Verified</div>'
+                                }
+                            }else{
+                                return data
+                            }
+                        }
+                    },
+                    {
+                        data: 'updated_at',
+                        className: 'text-center',
+                        defaultContent: '-'
+                    },
+                    {
+                        data: '',
+                        className: 'text-center',
+                        defaultContent: '<button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 deleteRawClient"><i class="bi bi-eraser"></i></button>'
+                    },
+                ],
+            });
             // Add a click event listener to each row in the parent DataTable
             table.on('click', 'td.dt-control', function(e) {
                 let tr = e.target.closest('tr');
@@ -168,8 +263,40 @@
                     row.child.hide();
                 } else {
                     // Open this row
-                    row.child(format(row.data())).show();
+                    var suggestion = row.data().suggestion;
+                    if (suggestion !== null && suggestion !== undefined) {
+                        var arrSuggest = suggestion.split(',');
+                        var intArrSuggest = [];
+                        for (var i = 0; i < arrSuggest.length; i++)
+                            intArrSuggest.push(parseInt(arrSuggest[i]));
+
+                        showLoading()
+                        axios.get("{{ url('api/client/suggestion') }}", {
+                                params: {
+                                    clientIds: intArrSuggest,
+                                    roleName: 'teacher'
+                                }
+                            })
+                            .then(function(response) {
+                                const data = response.data.data
+                                row.child(format(row.data(), data)).show();
+
+                                swal.close()
+                            })
+                            .catch(function(error) {
+                                swal.close()
+                                console.log(error);
+                            })
+                    }else{
+
+                        row.child(format(row.data(), null)).show();
+                    }
                 }
+            });
+
+            $('#rawTable tbody').on('click', '.deleteRawClient ', function() {
+                var data = table.row($(this).parents('tr')).data();
+                confirmDelete('client/teacher-counselor/raw', data.id)
             });
 
         });

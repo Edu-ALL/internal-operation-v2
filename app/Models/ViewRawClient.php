@@ -21,17 +21,18 @@ class ViewRawClient extends Authenticatable
      */
     protected $fillable = [
         'id',
-        'uuid',
         'fullname',
         'mail',
         'phone',
+        'parent_name',
+        'parent_mail',
+        'parent_phone',
+        'school',
         'register_as',
-        'role',
-        'relation_key',
-        'school_uuid',
+        'sch_id',
         'interest_countries',
-        'lead_id',
-        'graduation_year',
+        'lead_source',
+        'graduation_year_real',
         'created_at',
         'updated_at',
     ];
@@ -50,4 +51,8 @@ class ViewRawClient extends Authenticatable
         );
     }
 
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'tbl_client_roles', 'client_id', 'role_id');
+    }
 }

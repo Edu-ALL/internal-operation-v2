@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\v1\ExtSalesTrackingController;
 use App\Http\Controllers\Api\v1\SalesDashboardController;
 use App\Http\Controllers\Api\v1\PartnerDashboardController;
 use App\Http\Controllers\Api\v1\FinanceDashboardController;
+use App\Http\Controllers\Api\v1\SchoolController as APISchoolController;
 use App\Http\Controllers\ClientEventController;
 use App\Http\Controllers\ClientParentController;
 use App\Http\Controllers\ClientStudentController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\InvoiceSchoolController;
 use App\Http\Controllers\InvoicePartnerController;
 use App\Http\Controllers\InvoiceReferralController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\Module\ClientController;
 use App\Http\Controllers\ReceiptSchoolController;
 use App\Http\Controllers\ReceiptPartnerController;
 use App\Http\Controllers\ReceiptReferralController;
@@ -151,8 +153,13 @@ Route::get('event/party/{id}/{party}', [ClientEventController::class, 'updateNum
 # Get URL from short URL
 Route::get('track/referral/{referral}', [ClientEventController::class, 'trackReferralURL']);
 
+# Instance School API
+Route::get('school', [APISchoolController::class, 'search']);
 # Get Active School Data
 Route::get('instance/school/', [SchoolController::class, 'getSchoolData']);
 
 # Get Parents Data
 Route::get('client/parent/', [ClientParentController::class, 'getDataParents']);
+
+# Get Client Suggestion
+Route::get('client/suggestion/', [ClientController::class, 'getClientSuggestion']);
