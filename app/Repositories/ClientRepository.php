@@ -242,7 +242,7 @@ class ClientRepository implements ClientRepositoryInterface
                 $querySearch->whereIn('status_lead', $advanced_filter['status_lead']);
             })->when(!empty($advanced_filter['active_status']), function ($querySearch) use ($advanced_filter) {
                 $querySearch->whereIn('st_statusact', $advanced_filter['active_status']);
-            })->where('client.st_statusact', 1);
+            })->where('client.st_statusact', 1)->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $asDatatables === false ? $query->orderBy('client.created_at', 'desc')->get() : $query;
     }
@@ -275,7 +275,7 @@ class ClientRepository implements ClientRepositoryInterface
                 $querySearch->whereIn('status_lead', $advanced_filter['status_lead']);
             })->when(!empty($advanced_filter['active_status']), function ($querySearch) use ($advanced_filter) {
                 $querySearch->whereIn('st_statusact', $advanced_filter['active_status']);
-            })->where('client.st_statusact', 1);
+            })->where('client.st_statusact', 1)->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $asDatatables === false ? $query->orderBy('client.created_at', 'desc')->get() : $query->orderBy('first_name', 'asc');
     }
@@ -309,7 +309,7 @@ class ClientRepository implements ClientRepositoryInterface
                 $querySearch->whereIn('status_lead', $advanced_filter['status_lead']);
             })->when(!empty($advanced_filter['active_status']), function ($querySearch) use ($advanced_filter) {
                 $querySearch->whereIn('st_statusact', $advanced_filter['active_status']);
-            })->where('client.st_statusact', 1);
+            })->where('client.st_statusact', 1)->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $asDatatables === false ? $query->orderBy('client.created_at', 'desc')->get() : $query->orderBy('first_name', 'asc');
     }
@@ -349,7 +349,7 @@ class ClientRepository implements ClientRepositoryInterface
                 $querySearch->whereIn('status_lead', $advanced_filter['status_lead']);
             })->when(!empty($advanced_filter['active_status']), function ($querySearch) use ($advanced_filter) {
                 $querySearch->whereIn('st_statusact', $advanced_filter['active_status']);
-            })->where('client.st_statusact', 1);
+            })->where('client.st_statusact', 1)->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $asDatatables === false ? $query->orderBy('client.created_at', 'desc')->get() : $query->orderBy('first_name', 'asc');
     }
@@ -370,7 +370,7 @@ class ClientRepository implements ClientRepositoryInterface
             'client.*',
             'parent.mail as parent_mail',
             'parent.phone as parent_phone'
-        ])->selectRaw('RTRIM(CONCAT(parent.first_name, " ", COALESCE(parent.last_name, ""))) as parent_name')->leftJoin('tbl_client_relation as relation', 'relation.child_id', '=', 'client.id')->leftJoin('tbl_client as parent', 'parent.id', '=', 'relation.parent_id')->whereIn('client.id', $clientStudent);
+        ])->selectRaw('RTRIM(CONCAT(parent.first_name, " ", COALESCE(parent.last_name, ""))) as parent_name')->leftJoin('tbl_client_relation as relation', 'relation.child_id', '=', 'client.id')->leftJoin('tbl_client as parent', 'parent.id', '=', 'relation.parent_id')->whereIn('client.id', $clientStudent)->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $query->orderBy('first_name', 'asc');
     }
@@ -392,7 +392,7 @@ class ClientRepository implements ClientRepositoryInterface
                 $subQuery->whereMonth('client.created_at', date('m', strtotime($month)))->whereYear('client.created_at', date('Y', strtotime($month)));
             })->whereHas('roles', function ($subQuery) {
                 $subQuery->where('role_name', 'student');
-            });
+            })->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $asDatatables === false ?
             ($groupBy === true ? $query->select('*')->addSelect(DB::raw('YEAR(client.created_at) AS year'))->orderBy('client.created_at', 'desc')->get()->groupBy('year') : $query->get())
@@ -435,7 +435,7 @@ class ClientRepository implements ClientRepositoryInterface
                 $subQuery->whereMonth('client.created_at', date('m', strtotime($month)))->whereYear('client.created_at', date('Y', strtotime($month)));
             })->whereHas('roles', function ($subQuery) {
                 $subQuery->where('role_name', 'student');
-            });
+            })->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $asDatatables === false ?
             ($groupBy === true ? $query->select('*')->addSelect(DB::raw('YEAR(client.created_at) AS year'))->orderBy('client.created_at', 'desc')->get()->groupBy('year') : $query->get())
@@ -467,7 +467,7 @@ class ClientRepository implements ClientRepositoryInterface
                 $subQuery->where('type', 'program')->where('total_result', '>=', '0.65')->where('status', 1)->where('tbl_initial_program_lead.name', $initialProgram);
             })->where('client.st_statusact', 1)->orderByDesc(
                 DB::table('tbl_client_lead_tracking AS clt')->leftJoin('tbl_initial_program_lead AS ipl', 'ipl.id', '=', 'clt.initialprogram_id')->select('clt.total_result')->whereColumn('clt.client_id', 'client.id')->where('clt.type', 'lead')->where('ipl.name', $initialProgram)->where('clt.status', 1)
-            );
+            )->where('client.is_verified', 'Y')->whereNull('client.deleted_at');
 
         return $model;
     }
