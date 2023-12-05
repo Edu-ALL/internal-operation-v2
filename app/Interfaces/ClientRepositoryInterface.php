@@ -41,9 +41,13 @@ interface ClientRepositoryInterface
     public function getAllClientByRoleAndStatus($roleName, $statusClient);
     public function getAllChildrenWithNoParents($parentId);
     public function getClientById($clientId);
+    public function getClientByUUID($clientUUID);
     public function getClientByMonthCreatedAt(array $createdAt);
     public function getClientByPhoneNumber($phoneNumber);
+    public function getClientBySchool($schoolId);
+    public function getClientInSchool(array $schoolIds);
     public function getViewClientById($clientId);
+    public function getViewClientByUUID($clientUUID);
     public function checkIfClientIsMentee($clientId);
     public function deleteClient($clientId);
     public function createClient($role, array $clientDetails);
@@ -76,6 +80,14 @@ interface ClientRepositoryInterface
     public function getStudentByStudentId($studentId);
     public function getStudentByStudentName($studentName);
     public function getAllClientByRoleAndDate($roleName, $month = null);
+
+    # Raw Client
+    public function getAllRawClientDataTables($roleName);
+    public function getViewRawClientById($rawClientId);
+    public function getRawClientById($rawClientId);
+    public function deleteRawClient($rawClientId);
+    public function deleteRawClientByUUID($rawClientUUID);
+    public function getClientSuggestion(array $clientIds, $roleName);
 
     # CRM
     public function getStudentFromV1();

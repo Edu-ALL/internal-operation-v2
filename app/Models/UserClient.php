@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class UserClient extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'tbl_client';
     protected $appends = ['lead_source'];
@@ -28,6 +29,7 @@ class UserClient extends Authenticatable
     protected $fillable = [
         'id',
         'st_id',
+        'uuid',
         'first_name',
         'last_name',
         'mail',
@@ -40,6 +42,7 @@ class UserClient extends Authenticatable
         'postal_code',
         'address',
         'sch_id',
+        // 'sch_uuid',
         'st_grade',
         'lead_id',
         'eduf_id',
@@ -57,6 +60,7 @@ class UserClient extends Authenticatable
         'st_password',
         'preferred_program',
         'is_funding',
+        'is_verified',
         'register_as',
         'created_at',
         'updated_at',
