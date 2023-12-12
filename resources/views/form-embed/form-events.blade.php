@@ -375,6 +375,9 @@
                                 <small class="text-danger fw-light">{{ $message }}</small>
                             @enderror
                         </div>
+
+                        <x-form.scholarship class="mb-4" id="scholarship_input" />
+                        
                         <div class="mb-4" id="country_input">
                             <label
                                 class="md:mb-3 mb-1 font-normal md:text-lg text-sm text-gray-700 dark:text-gray-400">
@@ -501,6 +504,10 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.27/dist/sweetalert2.min.css
     new TomSelect('#destination_country', {
         create: false
     });
+    
+    new TomSelect('#scholarship', {
+        create: false
+    })
 
     new TomSelect('#leadSource', {
         create: false
