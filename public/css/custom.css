@@ -67,13 +67,9 @@ div.dataTables_processing {
     border: 1px solid #ced4da;
 }
 
-
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-    color: #fff;
-}
-
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove span,
 .select2-container--default .select2-selection--single .select2-selection__clear {
-    color: red;
+    color: red !important;
 }
 
 button.dt-button,
