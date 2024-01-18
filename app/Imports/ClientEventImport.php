@@ -35,8 +35,10 @@ use App\Models\ClientEventLogMail;
 use App\Models\Major;
 use App\Models\Tag;
 use App\Models\UserClientAdditionalInfo;
+use App\Notifications\ImportExcelFailed;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
@@ -69,6 +71,12 @@ class ClientEventImport implements ToCollection, WithHeadingRow, WithValidation,
         $this->importedBy = $importedBy;
     }
 
+    public function registerEvents(): array
+    {
+        return [
+            Notification::send(new ImportExcelFailed)
+        ];
+    }
 
     public function collection(Collection $rows)
     {
