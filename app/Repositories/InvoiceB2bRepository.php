@@ -769,7 +769,8 @@ class InvoiceB2bRepository implements InvoiceB2bRepositoryInterface
             })
             ->get();
 
-        $partnerProg  = PartnerProg::doesntHave('invoiceB2b')
+        $partnerProg  = PartnerProg::doesnthave('invoiceB2b')
+            ->leftJoin('tbl_invb2b', 'tbl_invb2b.partnerprog_id', '=', 'tbl_partner_prog.id')
             ->leftJoin('tbl_corp', 'tbl_corp.corp_id', '=', 'tbl_partner_prog.corp_id')
             ->leftJoin('program', 'program.prog_id', '=', 'tbl_partner_prog.prog_id')
             ->leftJoin('users', 'users.id', '=', 'tbl_partner_prog.empl_id')

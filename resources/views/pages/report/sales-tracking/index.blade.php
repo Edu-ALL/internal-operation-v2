@@ -83,7 +83,7 @@
 
             {{-- Sales Target  --}}
             @includeUnless(request()->get('start') && request()->get('end'), 'pages.report.sales-tracking.component.sales-target')
-
+            
             {{-- Initial Assessment Progress  --}}
             @include('pages.report.sales-tracking.component.initial-assessment')
 
