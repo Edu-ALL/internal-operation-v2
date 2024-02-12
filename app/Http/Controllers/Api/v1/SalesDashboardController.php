@@ -112,24 +112,18 @@ class SalesDashboardController extends Controller
                 $clientType = 'alumni';
                 break;
 
+            case "parent":
+                $clients = $this->clientRepository->getParents($asDatatables, $month);
+                $clientType = 'parent';
+                break;
+
+            case "teacher-counselor":
+                $clients = $this->clientRepository->getTeachers($asDatatables, $month);
+                $clientType = 'teacher/counselor';
+                break;
+
             default:
                 $title = $clientType = $type;
-        }
-
-        # when type is teacher/counselor
-        if ($clientType == "teacher-counselor")
-            $clientType = "teacher/counselor";
-
-        # this to make sure the clients that being fetch
-        # is the client filter by [prospective, potential, current, completed] 
-        if (gettype($clientType) == "string" && $clientType != "alumni") {
-
-            # is the client filter for [mentee, alumni, parents, teacher/counselor]
-            $clients = $this->clientRepository->getAllClientByRoleAndDate($clientType, $month);
-            if ($month != null) {
-                $last_month = date('Y-m', strtotime('-1 month', strtotime($month)));
-                $clients = $clients->merge($this->clientRepository->getAllClientByRoleAndDate($clientType, $last_month));
-            }
         }
 
         $index = 1;
@@ -152,14 +146,16 @@ class SalesDashboardController extends Controller
                     $now = date('Y-m');
                     $styling = $client_register_date == $now ? 'class="bg-primary text-white popup-modal-detail-client"' : 'class="popup-modal-detail-client"';
 
+                    $pic_name = isset($client->handleBy) ? $client->handledBy()->first()->full_name : null;
+
                     $html .= '<tr ' . $styling . ' data-detail="' . $client->id . '">
                                 <td>' . $index++ . '</td>
                                 <td>' . $client->full_name . '</td>
-                                <td>' . $client->handledBy()->first()->full_name .'</td>
+                                <td>' . $pic_name .'</td>
                                 <td>' . $client->mail . '</td>
                                 <td>' . $client->phone . '</td>
                                 <td>' . $client->graduation_year_real . '</td>
-                                <td>' . $client->created_at . '</td>
+                                <td>' . date('d F Y H:i', strtotime($client->created_at)) . '</td>
                             </tr>';
                 }
             }
@@ -1151,6 +1147,104 @@ class SalesDashboardController extends Controller
     public function exportClient()
     {
         return Excel::download(new DataClient(), 'data-client.xlsx');
+    }
+
+    public function getDetailInitialConsultByMonth(Request $request)
+    {
+        $cp_filter['qdate'] = $request->route('month');
+        $cp_filter['quuid'] = $request->route('user') ?? null;
+        $cp_filter['count'] = false;
+
+        $data = $this->clientProgramRepository->getInitialConsultationInformation($cp_filter);
+
+        $i = 0;
+        while ($i < count($data)) {
+            $no = 1;
+
+            switch ($i) {
+                case 0:
+                    $name = 'soon';
+                    break;
+                case 1:
+                    $name = 'already';
+                    break;
+                case 2:
+                    $name = 'success';
+                    break;
+            }
+
+            ${'table_content_'.$name} = null;
+            
+            if (count($data[$i]) == 0) {
+                ${'table_content_'.$name} .= '<tr><td class="text-center" colspan="3">No data</td></tr>';
+                $i++;
+                continue;
+            }
+
+
+            foreach ($data[$i] as $detail) {
+
+                ${'table_content_'.$name} .= '<tr>
+                            <td>'. $no++ .'</td>
+                            <td>'. $detail->client->full_name .'</td>
+                            <td>'. date('d F Y', strtotime($detail->initconsult_date)) .'</td>
+                        </tr>';
+            }
+
+            $i++;
+        }
+
+
+        $html = '<hr>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="">
+                    <label class="fw-semibold fs-6 text-primary">Soon</label>
+                </div>
+            </div>
+            <table class="table table-hover table-striped my-2">
+                <tr>
+                    <th width="5%">No.</th>
+                    <th>Client Name</th>
+                    <th style="width:150px">IC Date</th>
+                </tr>
+                ' . $table_content_soon . '
+            </table>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="">
+                    <label class="fw-semibold fs-6 text-danger">Already</label>
+                </div>
+            </div>
+            <table class="table table-hover table-striped my-2">
+                <tr>
+                    <th width="5%">No.</th>
+                    <th>Client Name</th>
+                    <th style="width:150px">IC Date</th>
+                </tr>
+                ' . $table_content_already . '
+            </table>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="">
+                    <label class="fw-semibold fs-6 text-warning">Success</label>
+                </div>
+            </div>
+            <table class="table table-hover table-striped my-2">
+                <tr>
+                    <th width="5%">No.</th>
+                    <th>Client Name</th>
+                    <th style="width:150px">IC Date</th>
+                </tr>
+                ' . $table_content_success . '
+            </table>';
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'ctx' => $html
+            ] 
+        ]);
+
     }
 
 }

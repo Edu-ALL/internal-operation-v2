@@ -23,6 +23,8 @@ use App\Http\Controllers\InvoicePartnerController;
 use App\Http\Controllers\InvoiceReferralController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Module\ClientController;
+use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\Api\v1\ProgramController as APIProgramController;
 use App\Http\Controllers\ReceiptSchoolController;
 use App\Http\Controllers\ReceiptPartnerController;
 use App\Http\Controllers\ReceiptReferralController;
@@ -60,6 +62,9 @@ Route::get('get/successful-program/{month}/{user?}', [SalesDashboardController::
 Route::get('get/detail/successful-program/{month}/{program}/{user?}', [SalesDashboardController::class, 'getSuccessfulProgramDetailByMonthAndProgram']);
 Route::get('get/admissions-mentoring/{month}/{user?}', [SalesDashboardController::class, 'getAdmissionsProgramByMonth']);
 Route::get('get/initial-consultation/{month}/{user?}', [SalesDashboardController::class, 'getInitialConsultationByMonth']);
+
+Route::get('get/detail/initial-consultation/{month}/{user?}', [SalesDashboardController::class, 'getDetailInitialConsultByMonth']);
+
 Route::get('get/academic-prep/{month}/{user?}', [SalesDashboardController::class, 'getAcademicPrepByMonth']);
 // Route::get('get/detail/academic-prep/{month}/{user?}', [SalesDashboardController::class, 'getAcademicPrepByMonthDetail']);
 Route::get('get/career-exploration/{month}/{user?}', [SalesDashboardController::class, 'getCareerExplorationByMonth']);
@@ -167,3 +172,6 @@ Route::get('client/suggestion/', [ClientController::class, 'getClientSuggestion'
 
 # Get Sales Team
 Route::get('user/sales-team/', [UserController::class, 'getSalesTeam']);
+
+# Get Prog Program based on Main Program Id
+Route::get('get/program/main/{mainProgId}', [APIProgramController::class, 'getProgramNameByMainProgramId']);
