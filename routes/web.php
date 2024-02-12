@@ -45,6 +45,7 @@ Route::group(['middleware' => ['auth', 'auth.department']], function () {
     Route::get('auth/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('index');
+    Route::get('sales-dashboard', [DashboardController::class, 'sales_dashboard'])->name('sales');
 });
 
 # AUTH END ------------------------------------

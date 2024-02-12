@@ -128,6 +128,12 @@ class DashboardController extends SalesDashboardController
         return view('pages.dashboard.index')->with($data);
     }
 
+    public function sales_dashboard(Request $request) {
+        $data = (new SalesDashboardController($this))->get($request);
+
+        return view('pages.dashboard.sales.sales')->with($data);   
+    }
+
     public function ajaxDataTablesOutstandingPayment()
     {
         return $this->invoicesRepository->getOustandingPaymentDataTables(date('Y-m'));
