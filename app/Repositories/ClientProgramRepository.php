@@ -57,6 +57,10 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 when($searchQuery['clientId'], function ($query) use ($searchQuery) {
                     $query->where('client_id', $searchQuery['clientId']);
                 })
+                # search by main program 
+                ->when(isset($searchQuery['mainProgram']) && count($searchQuery['mainProgram']) > 0, function ($query) use ($searchQuery) {
+                    $query->whereIn('main_prog_id', $searchQuery['mainProgram']);
+                })
                 # search by program name 
                 ->when(isset($searchQuery['programName']) && count($searchQuery['programName']) > 0, function ($query) use ($searchQuery) {
                     $query->whereIn('prog_id', $searchQuery['programName']);
@@ -166,6 +170,11 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
     public function getAllProgramOnClientProgram()
     {
         return ViewClientProgram::distinct('program_name')->select('program_name', 'prog_id')->get();
+    }
+
+    public function getAllMainProgramOnClientProgram()
+    {
+        return ViewClientProgram::distinct('main_prog_name')->select('main_prog_name', 'main_prog_id')->get();
     }
 
     public function getAllConversionLeadOnClientProgram()
@@ -528,6 +537,11 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
         return $clientProgram;
     }
 
+    public function updateFewField(int $clientprog_id, array $newCDetails)
+    {
+        return ClientProgram::whereClientProgramId($clientprog_id)->update($newCDetails);
+    }
+
     public function endedClientProgram(int $clientprog_id, array $newDetails)
     {
         return ClientProgram::whereClientProgramId($clientprog_id)->update($newDetails);
@@ -637,9 +651,6 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                     # and check the pic client program
                     orWhere('empl_id', $pic);
                 });
-            })->
-            whereHas('client', function ($query) {
-                $query->where('status', 1);
             })->
             get();
 

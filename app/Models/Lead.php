@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,29 @@ class Lead extends Model
     {
         return '#' . str_pad(dechex(mt_rand(0, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
     }
+    
+    protected function departmentName(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $this->department_id !== null ? $this->department->dept_name : null
+        );
+    }
+
+    public function leadName(): Attribute
+    {
+        if ($this->sub_lead != null) {
+
+            return Attribute::make(
+                get: fn ($value) => $this->main_lead . ' : ' . $this->sub_lead,
+            );
+        }
+            
+            
+        return Attribute::make(
+            get: fn ($value) => $this->main_lead,
+        );
+        
+    }
 
     public static function whereLeadId($id)
     {
@@ -71,5 +95,10 @@ class Lead extends Model
     public function clientProgram()
     {
         return $this->hasMany(ClientProgram::class, 'lead_id', 'lead_id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'id');
     }
 }

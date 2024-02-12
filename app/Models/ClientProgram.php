@@ -67,6 +67,7 @@ class ClientProgram extends Model
         'session_tutor',
         'registration_type',
         'referral_code',
+        'agreement',
         'created_at',
         'updated_at'
     ];
@@ -187,6 +188,11 @@ class ClientProgram extends Model
     public function logMail()
     {
         return $this->hasMany(ClientProgramLogMail::class, 'clientprog_id', 'clientprog_id');
+    }
+
+    public function viewClientRefCode()
+    {
+        return $this->belongsTo(ViewClientRefCode::class, 'referral_code', 'ref_code');
     }
 
     # PIC from sales team

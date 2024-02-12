@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Api\v1\DigitalDashboardController;
 use App\Http\Controllers\Api\v1\ExtClientController;
+use App\Http\Controllers\Api\v1\ExtLeadController;
+use App\Http\Controllers\Api\v1\ExtProgramController;
 use App\Http\Controllers\Api\v1\ExtSalesTrackingController;
+use App\Http\Controllers\Api\v1\ExtUserController;
 use App\Http\Controllers\Api\v1\SalesDashboardController;
 use App\Http\Controllers\Api\v1\PartnerDashboardController;
 use App\Http\Controllers\Api\v1\FinanceDashboardController;
@@ -25,6 +28,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Module\ClientController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\Api\v1\ProgramController as APIProgramController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ReceiptSchoolController;
 use App\Http\Controllers\ReceiptPartnerController;
 use App\Http\Controllers\ReceiptReferralController;
@@ -148,6 +152,17 @@ Route::prefix('v1')->group(function () {
     Route::get('get/alumnis', [ExtClientController::class, 'getAlumnis']);
     Route::get('get/detail/lead-source', [ExtSalesTrackingController::class, 'getLeadSourceDetail']);
     Route::get('get/detail/conversion-lead', [ExtSalesTrackingController::class, 'getConversionLeadDetail']);
+
+    # used for spreadsheets syncing data
+    Route::get('get/{department}/member', [ExtUserController::class, 'getMemberOfDepartments']);
+    Route::get('get/employees', [ExtUserController::class, 'getEmployees']);
+    Route::get('get/programs', [ExtProgramController::class, 'getPrograms']);
+    Route::get('get/programs/{main_program}', [ExtProgramController::class, 'getProgramsByMainProg']);
+    Route::get('get/programs/type/{type}', [ExtProgramController::class, 'getProgramsByType']);
+    Route::get('get/leads', [ExtLeadController::class, 'getLeadSources']);
+
+    # used for storing user client data
+    Route::post('register/event', [ExtClientController::class, 'store']);
 });
 
 # Client Event Attendance
@@ -161,6 +176,7 @@ Route::get('track/referral/{referral}', [ClientEventController::class, 'trackRef
 
 # Instance School API
 Route::get('school', [APISchoolController::class, 'search']);
+
 # Get Active School Data
 Route::get('instance/school/', [SchoolController::class, 'getSchoolData']);
 
@@ -171,7 +187,10 @@ Route::get('client/parent/', [ClientParentController::class, 'getDataParents']);
 Route::get('client/suggestion/', [ClientController::class, 'getClientSuggestion']);
 
 # Get Sales Team
-Route::get('user/sales-team/', [UserController::class, 'getSalesTeam']);
+Route::get('user/sales-team/', [UserController::class, 'getSalesTeam']); # basically same with route on line 155
 
 # Get Prog Program based on Main Program Id
 Route::get('get/program/main/{mainProgId}', [APIProgramController::class, 'getProgramNameByMainProgramId']);
+
+# Get List referral / sub lead referral (All Client)
+Route::get('get/referral/list', [LeadController::class, 'getListReferral']);

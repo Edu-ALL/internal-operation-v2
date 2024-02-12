@@ -36,6 +36,7 @@ use App\Imports\ParentImport;
 use App\Interfaces\ClientEventRepositoryInterface;
 use App\Jobs\RawClient\ProcessVerifyClient;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ClientParentController extends ClientController
 {
@@ -134,7 +135,6 @@ class ClientParentController extends ClientController
         $programs = $programsB2BB2C->merge($programsB2C);
         $countries = $this->tagRepository->getAllTags();
         $majors = $this->majorRepository->getAllMajors();
-        $listReferral = $this->clientRepository->getAllClients();
 
         return view('pages.client.parent.form')->with(
             [
@@ -148,8 +148,7 @@ class ClientParentController extends ClientController
                 'programs' => $programs,
                 'countries' => $countries,
                 'majors' => $majors,
-                'student' => $student,
-                'listReferral' => $listReferral
+                'student' => $student
             ]
         );
     }
@@ -265,7 +264,7 @@ class ClientParentController extends ClientController
 
         $schools = $this->schoolRepository->getAllSchools();
         $curriculums = $this->curriculumRepository->getAllCurriculums();
-        $childrens = $this->clientRepository->getAllChildrenWithNoParents($parentId);
+        $childrens = $this->clientRepository->getAllClientByRole('Student');
         $leads = $this->leadRepository->getAllMainLead();
         $events = $this->eventRepository->getAllEvents();
         $ext_edufair = $this->edufLeadRepository->getAllEdufairLead();
@@ -275,7 +274,6 @@ class ClientParentController extends ClientController
         $programs = $programsB2BB2C->merge($programsB2C);
         $countries = $this->tagRepository->getAllTags();
         $majors = $this->majorRepository->getAllMajors();
-        $listReferral = $this->clientRepository->getAllClients();
 
         return view('pages.client.parent.form')->with(
             [
@@ -289,8 +287,7 @@ class ClientParentController extends ClientController
                 'kols' => $kols,
                 'programs' => $programs,
                 'countries' => $countries,
-                'majors' => $majors,
-                'listReferral' => $listReferral
+                'majors' => $majors
             ]
         );
     }
@@ -378,12 +375,14 @@ class ClientParentController extends ClientController
 
     public function import(StoreImportExcelRequest $request)
     {
+        Cache::put('auth', Auth::user());
+        Cache::put('import_id', Carbon::now()->timestamp . '-import-parent');
 
         $file = $request->file('file');
 
         // try {
             // Excel::queueImport(new ParentImport(Auth::user()->first_name . ' '. Auth::user()->last_name), $file);
-            (new ParentImport($this->clientRepository, Auth::user()))->queue($file)->allOnQueue('imports-parent');
+            (new ParentImport())->queue($file)->allOnQueue('imports-parent');
 
             // $import = new ParentImport();
             // $import->import($file);
@@ -533,5 +532,29 @@ class ClientParentController extends ClientController
         $this->logSuccess('delete', null, 'Raw Client', Auth::user()->first_name . ' ' . Auth::user()->last_name, $rawParent);
 
         return Redirect::to('client/parent/raw')->withSuccess('Raw parent successfully deleted');
+    }
+
+    public function disconnectStudent(Request $request)
+    {
+        $studentId = $request->route('student');
+        $parentId = $request->route('parent');
+
+        DB::beginTransaction();
+        try {
+
+            $this->clientRepository->removeClientRelation($parentId, $studentId);
+            DB::commit();
+        } catch (Exception $e) {
+
+            DB::rollBack();
+            Log::error('Disconnect children failed : ' . $e->getMessage() . ' ' . $e->getLine());
+            return Redirect::to('client/parent/' . $parentId)->withError('failed to be diconnect children.');
+        }
+
+        # Delete success
+        # create log success
+        $this->logSuccess('delete', null, 'relation children', Auth::user()->first_name . ' ' . Auth::user()->last_name, ['client_id' => $studentId]);
+
+        return Redirect::to('client/parent/' . $parentId)->withSuccess('Successfully disconnect children.');
     }
 }

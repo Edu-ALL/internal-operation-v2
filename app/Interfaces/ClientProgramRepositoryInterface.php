@@ -6,6 +6,7 @@ interface ClientProgramRepositoryInterface
 {
     public function getAllClientProgramDataTables($searchQuery);
     public function getAllProgramOnClientProgram();
+    public function getAllMainProgramOnClientProgram();
     public function getAllConversionLeadOnClientProgram();
     public function getAllMentorTutorOnClientProgram();
     public function getAllPICOnClientProgram();
@@ -14,6 +15,7 @@ interface ClientProgramRepositoryInterface
     public function getClientProgramByDetail(array $detail);
     public function createClientProgram(array $clientProgramDetails);
     public function updateClientProgram($clientProgramId, array $clientProgramDetails);
+    public function updateFewField(int $clientprog_id, array $newDetails);
     public function endedClientProgram(int $clientprog_id, array $newDetails);
     public function endedClientPrograms(array $clientprog_ids, array $newDetails);
     public function deleteClientProgram($clientProgramId);

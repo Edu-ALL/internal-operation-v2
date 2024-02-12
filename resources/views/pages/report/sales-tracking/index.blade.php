@@ -82,7 +82,7 @@
             {{-- @include('pages.report.sales-tracking.component.hot-leads-number') --}}
 
             {{-- Sales Target  --}}
-            {{-- @include('pages.report.sales-tracking.component.sales-target') --}}
+            @include('pages.report.sales-tracking.component.sales-target')
 
             {{-- Initial Assessment Progress  --}}
             @include('pages.report.sales-tracking.component.initial-assessment')

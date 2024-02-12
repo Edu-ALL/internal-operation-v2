@@ -24,6 +24,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
@@ -96,7 +97,7 @@ class ClientTeacherCounselorController extends ClientController
         $events = $this->eventRepository->getAllEvents();
         $ext_edufair = $this->edufLeadRepository->getAllEdufairLead();
         $kols = $this->leadRepository->getAllKOLlead();
-        $listReferral = $this->clientRepository->getAllClients();
+        // $listReferral = $this->clientRepository->getAllClients();
 
         return view('pages.client.teacher.form')->with(
             [
@@ -106,7 +107,7 @@ class ClientTeacherCounselorController extends ClientController
                 'events' => $events,
                 'ext_edufair' => $ext_edufair,
                 'kols' => $kols,
-                'listReferral' => $listReferral
+                // 'listReferral' => $listReferral
             ]
         );
     }
@@ -179,7 +180,7 @@ class ClientTeacherCounselorController extends ClientController
         $events = $this->eventRepository->getAllEvents();
         $ext_edufair = $this->edufLeadRepository->getAllEdufairLead();
         $kols = $this->leadRepository->getAllKOLlead();
-        $listReferral = $this->clientRepository->getAllClients();
+        // $listReferral = $this->clientRepository->getAllClients();
 
         return view('pages.client.teacher.form')->with(
             [
@@ -190,7 +191,7 @@ class ClientTeacherCounselorController extends ClientController
                 'events' => $events,
                 'ext_edufair' => $ext_edufair,
                 'kols' => $kols,
-                'listReferral' => $listReferral
+                // 'listReferral' => $listReferral
             ]
         );
     }
@@ -357,11 +358,13 @@ class ClientTeacherCounselorController extends ClientController
 
     public function import(StoreImportExcelRequest $request)
     {
+        Cache::put('auth', Auth::user());
+        Cache::put('import_id', Carbon::now()->timestamp . '-import-teacher');
 
         $file = $request->file('file');
 
         // Excel::queueImport(new TeacherImport(Auth::user()->first_name . ' '. Auth::user()->last_name), $file);
-        (new TeacherImport($this->clientRepository, Auth::user()))->queue($file)->allOnQueue('imports-teacher');
+        (new TeacherImport())->queue($file)->allOnQueue('imports-teacher');
 
         // $import = new TeacherImport;
         // $import->import($file);

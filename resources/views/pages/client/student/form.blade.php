@@ -185,91 +185,6 @@
                     </div>
                 </div>
 
-                <div class="card my-3">
-                    <div class="card-header">
-                        <h6 class="my-1 p-0">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Parent Detail
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        {{-- Parent  --}}
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="row align-items-start">
-                                    <div class="col-md-8">
-                                        <div class="mb-2">
-                                            <label>Parent's Name</label>
-                                            <input type="hidden" name="pr_id_old"
-                                                value="{{ isset($student->parents) && $student->parents()->first() ? $student->parents()->first()->id : null }}">
-                                            <select class="select w-100" name="pr_id" id="prName"
-                                                onchange="addParent()">
-                                                <option data-placeholder="true"></option>
-                                                @if (isset($parents))
-                                                    @foreach ($parents as $parent)
-                                                        <option value="{{ $parent->id }}"
-                                                            @if (isset($student->parents) && count($student->parents) > 0) {{ $student->parents()->first()->id == $parent->id ? 'selected' : null }}
-                                                            @else
-                                                                {{ old('pr_id') == $parent->id ? 'selected' : null }} @endif>
-                                                            {{ $parent->first_name . ' ' . $parent->last_name }}</option>
-                                                    @endforeach
-                                                @endif
-                                                <option value="add-new"
-                                                    {{ old('pr_id') == 'add-new' ? 'selected' : null }}>Add New Parent
-                                                </option>
-                                            </select>
-                                            @error('pr_id')
-                                                <small class="text-danger fw-light">{{ $message }}</small>
-                                            @enderror
-                                        </div>
-
-                                        {{-- New Parent Field  --}}
-                                        <div class="row parent d-none">
-                                            <div class="col-md-6 mb-2">
-                                                <small>First Name <i class="text-danger font-weight-bold">*</i></small>
-                                                <input id="pFName" name="pr_firstname" type="text"
-                                                    placeholder="First Name" class="form-control form-control-sm"
-                                                    value="{{ old('pr_firstname') }}">
-                                                @error('pr_firstname')
-                                                    <small class="text-danger fw-light">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <small>Last Name</small>
-                                                <input name="pr_lastname" type="text" placeholder="Last Name"
-                                                    class="form-control form-control-sm"
-                                                    value="{{ old('pr_lastname') }}">
-                                                @error('pr_lastname')
-                                                    <small class="text-danger fw-light">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <small>E-mail </small>
-                                                <input name="pr_mail" type="text" placeholder="E-mail"
-                                                    class="form-control form-control-sm" value="{{ old('pr_mail') }}">
-                                                @error('pr_mail')
-                                                    <small class="text-danger fw-light">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <small>Phone Number <i class="text-danger font-weight-bold">*</i></small>
-                                                <input name="pr_phone" type="text" placeholder="Phone Number"
-                                                    class="form-control form-control-sm" value="{{ old('pr_phone') }}">
-                                                @error('pr_phone')
-                                                    <small class="text-danger fw-light">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 text-center parent d-none">
-                                        <img src="{{ asset('img/parent.jpeg') }}" alt="" class="w-50">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 {{-- School  --}}
                 <div class="row">
                     <div class="col-md-4">
@@ -431,20 +346,17 @@
                             @enderror
                         </div>
                     </div>
+                    
                     <div class="col-md-4 referral d-none">
                         <div class="mb-2">
                             <label>Referral Name <i class="text-danger font-weight-bold">*</i></label>
-                            <select class="select w-100" id="refCode" name="referral_code">
-                                <option data-placeholder="true"></option>
-                                @if (isset($listReferral) && count($listReferral) > 0)
-                                    @foreach ($listReferral as $referral)
-                                        <option value="{{ $referral->viewClientRefCode->ref_code }}"
-                                            @if (old('referral_code') == $referral->viewClientRefCode->ref_code) {{ 'selected' }}
-                                            @elseif (isset($student) && $student->referral_code == $referral->viewClientRefCode->ref_code)
-                                            {{ 'selected' }} @endif>
-                                            {{ $referral->full_name }}</option>
-                                    @endforeach
+                            <input type="hidden" name="old_refname" id="old_refname" value="{{ isset($student->referral_code) ? $student->referral_name : null }}">
+                            <select name="referral_code" id="referral_code" class="select w-100 select-referral">
+                                @if(isset($student->referral_code))
+                                    <option value="{{ $student->referral_code }}" selected="selected">{{ $student->referral_name }}</option>
                                 @endif
+                                {{-- <option data-placeholder="true"></option> --}}
+
                             </select>
                             @error('referral_code')
                                 <small class="text-danger fw-light">{{ $message }}</small>
@@ -483,7 +395,7 @@
                                 @if (isset($ext_edufair) && count($ext_edufair) > 0)
                                     @foreach ($ext_edufair as $edufair)
                                         <option value="{{ $edufair->id }}"
-                                            @if (isset($teacher_counselor->external_edufair->id)) {{ $teacher_counselor->external_edufair->id == $edufair->id ? 'selected' : null }}
+                                            @if (isset($student->external_edufair->id)) {{ $student->external_edufair->id == $edufair->id ? 'selected' : null }}
                                             @else
                                                 {{ old('eduf_id') == $edufair->id ? 'selected' : null }} @endif>
                                             {{ $edufair->organizer_name . ' - ' . date('d M Y', strtotime($edufair->event_start)) }}
@@ -669,15 +581,6 @@
 
 @push('scripts')
 <script>
-    function addParent() {
-        var p = $('#prName').val();
-
-        if (p == 'add-new') {
-            $(".parent").removeClass("d-none");
-        } else {
-            $(".parent").addClass("d-none");
-        }
-    }
 
     function addSchool() {
         var s = $('#schoolName').val();
@@ -737,6 +640,10 @@
         
         var graduation_year = parseInt(month) > 7 ? (12 - parseInt(grade)) + parseInt(year) + 1 : (12 - parseInt(grade)) + parseInt(year)
         $('#auto_grad_year').val(graduation_year);
+    })
+
+    $('#referral_code').on('change', function(){
+        $('#old_refname').val($("option:selected", this).text())
     })
 
 
@@ -807,13 +714,28 @@
 
     $(document).ready(function() {
 
+        var baseUrl = "{{ url('/') }}/api/get/referral/list";
+
+        $(".select-referral").select2({
+            placeholder: 'Referral Name...',
+            // width: '350px',
+            allowClear: true,
+            ajax: {
+                url: baseUrl,
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        term: params.term || '',
+                        page: params.page || 1
+                    }
+                },
+                cache: true
+            }
+        });
+
         const documentReady = () => {
 
-            @if (old('pr_id') !== null && old('pr_id') == 'add-new')
-                $("#prName").select2().val("{{ old('pr_id') }}").trigger('change')
-            @elseif (old('pr_id') !== null)
-                $("#prName").select2().val("{{ old('pr_id') }}").trigger('change')
-            @endif
 
             @if (old('sch_id') !== null && old('sch_id') == 'add-new')
                 $("#schoolName").select2().val("{{ old('sch_id') }}").trigger('change')
@@ -857,6 +779,18 @@
                 @endforeach
 
                 $("#major").val(st_abrmajor).trigger('change')
+            @endif
+
+            @if (old('referral_code'))
+                // Set the value, creating a new option if necessary
+                if ($('#referral_code').find("option[value= {{ old('referral_code') }} ]").length) {
+                    $('#referral_code').val('{{ old("referral_code") }}').trigger('change');
+                } else { 
+                    // Create a DOM Option and pre-select by default
+                    var newOption = new Option('{{ old("old_refname") }}', '{{ old("referral_code") }}', true, true);
+                    // Append it to the select
+                    $('#referral_code').append(newOption).trigger('change');
+                } 
             @endif
 
             // @if (isset($student->interestPrograms))
