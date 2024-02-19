@@ -485,12 +485,16 @@ class ClientEventRepository implements ClientEventRepositoryInterface
 
     public function createClientEvent(array $clientEvents)
     {
-        return ClientEvent::create($dclientEvents);
+        return ClientEvent::create($clientEvents);
     }
 
     public function updateClientEvent($clientEventId, array $newClientEvents)
     {
-        return ClientEvent::find($clientEventId)->update($newClientEvents);
+        $clientEvent = ClientEvent::find($clientEventId);
+        $clientEvent->update($newClientEvents);
+
+        return $clientEvent;
+
     }
 
     # 
