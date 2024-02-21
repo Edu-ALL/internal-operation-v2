@@ -122,6 +122,11 @@ class ExtClientController extends Controller
         );
     }
 
+    public function store_express(Request $request)
+    {
+
+    }
+
     public function store(Request $request)
     {
 
@@ -266,6 +271,8 @@ class ExtClientController extends Controller
                         'client' => [
                             'name' => $existing->client->full_name,
                             'email' => $existing->client->mail,
+                            'is_vip' => $existing->notes == 'vip' ? true : false,
+                            'register_as' => $existing->client->register_as
                         ],
                         'clientevent' => [
                             'id' => $existing->clientevent_id,
@@ -340,7 +347,8 @@ class ExtClientController extends Controller
                 'client' => [
                     'name' => $storedClientEvent->client->full_name,
                     'email' => $storedClientEvent->client->mail,
-                    'is_vip' => $storedClientEvent->notes == 'vip' ? true : false
+                    'is_vip' => $storedClientEvent->notes == 'vip' ? true : false,
+                    'register_as' => $storedClientEvent->client->register_as
                 ],
                 'clientevent' => [
                     'id' => $storedClientEvent->clientevent_id,
@@ -490,7 +498,7 @@ class ExtClientController extends Controller
         # there are two ways of procedure depends on where the user registered (ots, pra-reg)
 
         # initiate the variables
-        $clientEventId = $clientevent->clientevent_id;
+        $storedClientEventId = $clientevent->clientevent_id;
         $eventName = $clientevent->event->event_title;
         $clientInformation = [
             'clientDetails' => [
@@ -504,6 +512,9 @@ class ExtClientController extends Controller
             case "ots":
                 # thanks mail with a ticket and link to access EduApp
                 $template = 'mail-template/registration/event/ots-mail-registration';
+
+                # calling send email without QR method from client event controller
+                app('App\Http\Controllers\ClientEventController')->sendMailThanks($storedClientEventId, $eventName, $clientInformation);
                 break;
 
 
@@ -512,7 +523,7 @@ class ExtClientController extends Controller
                 $template = 'mail-template/registration/event/pra-reg-mail-registration';
                 
                 # calling send email QR method from client event controller
-                app('App\Http\Controllers\ClientEventController')->sendMailQrCode($clientEventId, $eventName, $clientInformation);
+                app('App\Http\Controllers\ClientEventController')->sendMailQrCode($storedClientEventId, $eventName, $clientInformation);
 
         }
 
