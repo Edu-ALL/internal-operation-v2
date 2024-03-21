@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Bus\Batch;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
@@ -54,6 +55,8 @@ class RunWorker extends Command
         
         
         Log::debug('Workers has been ran : '.json_encode(Artisan::output()));
+
+        
 
         return Command::SUCCESS;
     }

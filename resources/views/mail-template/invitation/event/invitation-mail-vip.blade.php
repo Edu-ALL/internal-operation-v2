@@ -1,6 +1,6 @@
 @extends('layout.email-event')
 @section('banner')
-    <img src="{{asset('img/event/EduAll/banner_email_eduall_2024.webp')}}" alt="Edu All Launchpad" width="2500" style="width:2500px;max-width:100%;height:auto;border:none;text-decoration:none;color:#ffffff;" >
+    <img src="{{asset('img/event/EduAll/banner_email_eduall_2024.webp')}}" alt="EduAll Launchpad" width="2500" style="width:2500px;max-width:100%;height:auto;border:none;text-decoration:none;color:#ffffff;" >
 @endsection
 @section('content')
     <table role="presentation" class="main">
@@ -26,7 +26,7 @@
 
                             </p>
 
-                            <p style="text-align: center;margin: 2.5em auto;">
+                            {{-- <p style="text-align: center;margin-top: 2.5em auto;">
                                 <a class="button" href="{{ $param['link'] }}"
                                     style="background: #3b6cde; 
                                         text-decoration: none; 
@@ -36,9 +36,18 @@
                                         mso-padding-alt:0;
                                         text-underline-color:#156ab3">
                                         <!--[if mso]><i style="letter-spacing: 25px;mso-font-width:-100%;mso-text-raise:20pt">&nbsp;</i><![endif]-->
-                                        <span style="mso-text-raise:10pt;font-weight:bold;">Click Here for attend</span>
+                                        <span style="mso-text-raise:10pt;font-weight:bold;"></span>
                                         <!--[if mso]><i style="letter-spacing: 25px;mso-font-width:-100%">&nbsp;</i><![endif]-->
                                 </a>
+                            </p> --}}
+                            <p style="text-align: center">
+                                <a href="{{ $param['link'] }}" style="cursor:pointer;">
+                                    <button style="border-radius: 3px; border: 1px solid #0100D4; color: #FFFFFF; background-color: #0168FF; padding: 15px 25px;">Yes, I'm Attending!</button>
+                                </a>
+                            </p>
+
+                            <p style="font-size: 10px; text-align:center;">
+                                (by clicking this button, you are automatically registered to EduALL Launchpad)
                             </p>
                         
                             <p>
@@ -63,5 +72,5 @@
     </table>
 @endsection
 @section('footer')
-    <img src="{{asset('img/makerspace/email_footer.jpg')}}" alt="STEM+ Wonderlab" width="2500" style="width:2500px;max-width:100%;height:auto;border:none;text-decoration:none;color:#ffffff;" >
+    <img src="{{asset('img/event/EduAll/banner-email-footer.png')}}" alt="EduAll Launchpad" width="2500" style="width:2500px;max-width:100%;height:auto;border:none;text-decoration:none;color:#ffffff;" >
 @endsection
