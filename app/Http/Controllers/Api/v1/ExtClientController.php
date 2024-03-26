@@ -170,6 +170,7 @@ class ExtClientController extends Controller
         $notes = $request->notes;
 
         $is_site = $request->is_site ?? null;
+        $is_confirm = $request->is_confirm ?? null;
 
         $urlRegistration = 'https://registration.edu-all.com';
 
@@ -311,6 +312,7 @@ class ExtClientController extends Controller
                 if ($is_site == null || $is_site == false){
                     return Redirect::to($urlRegistration . '/thanks/event/vip');
                 }
+
                     
                 return response()->json([
                     'success' => true,
@@ -340,6 +342,12 @@ class ExtClientController extends Controller
                 ]);
             }
             
+            if ($is_site == null || $is_site == false){
+                if($is_confirm == null || $is_confirm == false){
+                    $linkRegist = route('register-express-event', ['main_client' => $main_client, 'notes' => 'WxSFs0LGh', 'second_client' => $second_client, 'EVT' => 'EVT-0014']);
+                    return Redirect::to($urlRegistration . '/confirmation/VIP?url=' . $linkRegist);
+                }
+            }
 
             $clientEventDetails = [
                 'ticket_id' => $this->generateTicketID(),
@@ -447,8 +455,11 @@ class ExtClientController extends Controller
         }
 
         if ($is_site == null || $is_site == false){
-            return Redirect::to($urlRegistration . '/thanks/event/vip');
+            if(isset($is_confirm) && $is_confirm == true){
+                return Redirect::to($urlRegistration . '/thanks/event/vip');
+            }
         }
+
 
         return response()->json([
             'success' => true,
