@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ExtClientController extends Controller
 {
@@ -599,6 +600,8 @@ class ExtClientController extends Controller
                     # attach destination countries if any
                     $this->attachDestinationCountry($clientId, $validated['destination_country']);
 
+                    $this->checkClientIsExistsOnClientEvent($client, $validated);
+
                     break;
     
                 case "parent":
@@ -618,12 +621,24 @@ class ExtClientController extends Controller
                         
                         $this->attachDestinationCountry($studentId, $validated['destination_country']);
 
+                        // check if both parent and student have already joined the event
+                        $familyIds = [
+                            'parentId' => $parent->id,
+                            'childId' => $studentId,
+                        ];
+
+                        $this->checkFamilyAreExistsOnClientEvent($familyIds, $validated);
+                        
                     }
+
+                    $this->checkClientIsExistsOnClientEvent($client, $validated);
 
                     break;
     
                 case "teacher/counsellor":
                     $client = $this->storeTeacher($validated);
+
+                    $this->checkClientIsExistsOnClientEvent($client, $validated);
                     break;
 
                 default:
@@ -633,32 +648,7 @@ class ExtClientController extends Controller
 
 
 
-            # check if registered client has already joined the event
-            if ($existing = $this->clientEventRepository->getClientEventByClientIdAndEventId($client->id, $validated['event_id'])) {
-
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'You have joined the event.',
-                    'code' => 'EXT', # existing / has joined
-                    'data' => [
-                        'client' => [
-                            'name' => $existing->client->full_name,
-                            'email' => $existing->client->mail,
-                            'is_vip' => $existing->notes == 'VIP' ? true : false,
-                            'register_as' => $this->getRole($existing)['role']
-                        ],
-                        'clientevent' => [
-                            'id' => $existing->clientevent_id,
-                            'ticket_id' => $existing->ticket_id,
-                            'is_offline' => (isset($validated['event_type']) || $validated['event_type']) == "offline" ? true : false,
-                        ],
-                        'link' => [
-                            'scan' => url('/client-event/CE/'.$existing->clientevent_id)  
-                        ]
-                    ]
-                ]);
-            }
+            
 
 
             # declare variables for client events
@@ -788,6 +778,69 @@ class ExtClientController extends Controller
         while ($isUnique === false);
 
         return $ticket_id;
+    }
+
+    private function checkClientIsExistsOnClientEvent($client, $incomingRequest)
+    {
+        # check if registered client has already joined the event
+        if ($existing = $this->clientEventRepository->getClientEventByClientIdAndEventId($client->id, $incomingRequest['event_id'])) {
+
+
+            return response()->json([
+                'success' => true,
+                'message' => 'You have joined the event.',
+                'code' => 'EXT', # existing / has joined
+                'data' => [
+                    'client' => [
+                        'name' => $existing->client->full_name,
+                        'email' => $existing->client->mail,
+                        'is_vip' => $existing->notes == 'VIP' ? true : false,
+                        'register_as' => $this->getRole($existing)['role']
+                    ],
+                    'clientevent' => [
+                        'id' => $existing->clientevent_id,
+                        'ticket_id' => $existing->ticket_id,
+                        'is_offline' => (isset($incomingRequest['event_type']) || $incomingRequest['event_type']) == "offline" ? true : false,
+                    ],
+                    'link' => [
+                        'scan' => url('/client-event/CE/'.$existing->clientevent_id)  
+                    ]
+                ]
+            ]);
+        }
+
+        return true;
+    }
+
+    private function checkFamilyAreExistsOnClientEvent(array $familyIds, $incomingRequest)
+    {
+        if ($existing = $this->clientEventRepository->getClientEventByMultipleIdAndEventId($familyIds['parentId'], $incomingRequest['event_id'], $familyIds['childId'])) {
+
+            return response()->json([
+                'success' => true,
+                'message' => 'You and your child have joined the event.',
+                'code' => 'EXT', # existing / has joined
+                'data' => [
+                    'client' => [
+                        'name' => $existing->client->full_name,
+                        'email' => $existing->client->mail,
+                        'is_vip' => $existing->notes == 'VIP' ? true : false,
+                        'register_as' => $this->getRole($existing)['role']
+                    ],
+                    'clientevent' => [
+                        'id' => $existing->clientevent_id,
+                        'ticket_id' => $existing->ticket_id,
+                        'is_offline' => (isset($incomingRequest['event_type']) || $incomingRequest['event_type']) == "offline" ? true : false,
+                    ],
+                    'link' => [
+                        'scan' => url('/client-event/CE/'.$existing->clientevent_id)  
+                    ]
+                ]
+            ]);
+
+        }
+
+        return true;
     }
 
     private function storeStudent($incomingRequest)
@@ -1076,10 +1129,7 @@ class ExtClientController extends Controller
                 $template = 'mail-template.registration.event.pra-reg-mail-registration';
                 $email = [
                     'subject' => "Thank you for registering to {$eventName}!",
-                    'recipient' => [
-                        'name' => $incomingRequest['fullname'],
-                        'mail' => $incomingRequest['mail']
-                    ]
+                    'recipient' => $clientInformation
                 ];
 
                 # this ticket id will be converted into QR code
@@ -1219,7 +1269,10 @@ class ExtClientController extends Controller
             'user' => 'nullable',
             'fullname' => 'required',
             'mail' => 'required|email|exists:tbl_client,mail',
-            'phone' => 'required|exists:tbl_client,phone',
+            'phone' => [
+                'required',
+                Rule::unique('tbl_client')->ignore($requestUpdateClientEvent->client->id),
+            ],
             'secondary_name' => 'required_if:have_child,true',
             'secondary_email' => 'nullable|email',
             'secondary_phone' => 'nullable',
@@ -1239,7 +1292,6 @@ class ExtClientController extends Controller
             ],
             'destination_country.*' => 'exists:tbl_tag,id',
             'scholarship' => 'required|in:Y,N',
-            'lead_source_id' => 'required|exists:tbl_lead,lead_id',
             'event_id' => 'required|exists:tbl_events,event_id',
             # status
             'attend_status' => 'nullable|in:attend',

@@ -248,7 +248,6 @@ class ParentImport extends ToCollectionImport implements SkipsOnFailure
     public function prepareForValidation($data)
     {
 
-        DB::beginTransaction();
         try {
 
             if ($data['lead'] == 'School' || $data['lead'] == 'Counselor') {
@@ -267,10 +266,8 @@ class ParentImport extends ToCollectionImport implements SkipsOnFailure
             $partner = Corporate::where('corp_name', $data['partner'])->get()->pluck('corp_id')->first();
             $kol = Lead::where('main_lead', 'KOL')->where('sub_lead', $data['kol'])->get()->pluck('lead_id')->first();
 
-            DB::commit();
         } catch (Exception $e) {
 
-            DB::rollBack();
             Log::error('Import parent failed : ' . $e->getMessage());
         }
 
