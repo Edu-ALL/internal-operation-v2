@@ -138,114 +138,107 @@ class ParentImport extends ToCollectionImport implements SkipsOnFailure
 
         $logDetails = $parentIds = $childrenIds = [];
 
-        DB::beginTransaction();
-        try {
 
-            foreach ($rows as $row) {
-                $parent = null;
-                $phoneNumber = $this->setPhoneNumber($row['phone_number']);
+        foreach ($rows as $row) {
+            $parent = null;
+            $phoneNumber = $this->setPhoneNumber($row['phone_number']);
 
-                $parentName = $this->explodeName($row['full_name']);
+            $parentName = $this->explodeName($row['full_name']);
 
-                $parent = $this->checkExistingClientImport($phoneNumber, $row['email']);
+            $parent = $this->checkExistingClientImport($phoneNumber, $row['email']);
 
-                $joinedDate = isset($row['joined_date']) ? $row['joined_date'] : null;
+            $joinedDate = isset($row['joined_date']) ? $row['joined_date'] : null;
 
 
-                if (!$parent['isExist']) {
-                    $parentDetails = [
-                        'first_name' => $parentName['firstname'],
-                        'last_name' => isset($parentName['lastname']) ? $parentName['lastname'] : null,
-                        'mail' => $row['email'],
-                        'phone' => $phoneNumber,
-                        'dob' => isset($row['date_of_birth']) ? $row['date_of_birth'] : null,
-                        'insta' => isset($row['instagram']) ? $row['instagram'] : null,
-                        'state' => isset($row['state']) ? $row['state'] : null,
-                        'city' => isset($row['city']) ? $row['city'] : null,
-                        'address' => isset($row['address']) ? $row['address'] : null,
+            if (!$parent['isExist']) {
+                $parentDetails = [
+                    'first_name' => $parentName['firstname'],
+                    'last_name' => isset($parentName['lastname']) ? $parentName['lastname'] : null,
+                    'mail' => $row['email'],
+                    'phone' => $phoneNumber,
+                    'dob' => isset($row['date_of_birth']) ? $row['date_of_birth'] : null,
+                    'insta' => isset($row['instagram']) ? $row['instagram'] : null,
+                    'state' => isset($row['state']) ? $row['state'] : null,
+                    'city' => isset($row['city']) ? $row['city'] : null,
+                    'address' => isset($row['address']) ? $row['address'] : null,
+                    'lead_id' => $row['lead'],
+                    'event_id' => isset($row['event']) && $row['lead'] == 'LS004' ? $row['event'] : null,
+                    'eduf_id' => isset($row['edufair'])  && $row['lead'] == 'LS018' ? $row['edufair'] : null,
+                    'st_levelinterest' => $row['level_of_interest'],
+                ];
+
+                isset($row['joined_date']) ? $parentDetails['created_at'] = $row['joined_date'] : null;
+                
+                $roleId = Role::whereRaw('LOWER(role_name) = (?)', ['parent'])->first();
+
+                $parent = UserClient::create($parentDetails);
+                $parent->roles()->attach($roleId);
+            } else {
+                $parent = UserClient::find($parent['id']);
+            }
+
+            $children = null;
+            $checkExistChildren = null;
+            if (isset($row['children_name'])) {
+                $checkExistChildren = $this->checkExistClientRelation('parent', $parent, $row['children_name']);
+                
+                if($checkExistChildren['isExist'] && $checkExistChildren['client'] != null){
+                    $children = $checkExistChildren['client'];
+                }else if(!$checkExistChildren['isExist']){
+                    $name = $this->explodeName($row['children_name']);
+                    $school = School::where('sch_name', $row['school'])->first();
+
+                    if (!isset($school)) {
+                        $school = $this->createSchoolIfNotExists($row['school']);
+                    }
+
+                    $childrenDetails = [
+                        'first_name' => $name['firstname'],
+                        'last_name' => isset($name['lastname']) ? $name['lastname'] : null,
+                        'sch_id' => $school->sch_id,
+                        'graduation_year' => isset($row['graduation_year']) ? $row['graduation_year'] : null,
                         'lead_id' => $row['lead'],
                         'event_id' => isset($row['event']) && $row['lead'] == 'LS004' ? $row['event'] : null,
                         'eduf_id' => isset($row['edufair'])  && $row['lead'] == 'LS018' ? $row['edufair'] : null,
-                        'st_levelinterest' => $row['level_of_interest'],
                     ];
 
-                    isset($row['joined_date']) ? $parentDetails['created_at'] = $row['joined_date'] : null;
-                    
-                    $roleId = Role::whereRaw('LOWER(role_name) = (?)', ['parent'])->first();
+                    isset($row['joined_date']) ? $childrenDetails['created_at'] = $row['joined_date'] : null;
 
-                    $parent = UserClient::create($parentDetails);
-                    $parent->roles()->attach($roleId);
-                } else {
-                    $parent = UserClient::find($parent['id']);
+                    $roleId = Role::whereRaw('LOWER(role_name) = (?)', ['student'])->first();
+
+                    $children = UserClient::create($childrenDetails);
+                    $children->roles()->attach($roleId);
+                    $parent->childrens()->attach($children);
                 }
 
-                $children = null;
-                $checkExistChildren = null;
-                if (isset($row['children_name'])) {
-                    $checkExistChildren = $this->checkExistClientRelation('parent', $parent, $row['children_name']);
-                    
-                    if($checkExistChildren['isExist'] && $checkExistChildren['client'] != null){
-                        $children = $checkExistChildren['client'];
-                    }else if(!$checkExistChildren['isExist']){
-                        $name = $this->explodeName($row['children_name']);
-                        $school = School::where('sch_name', $row['school'])->first();
-
-                        if (!isset($school)) {
-                            $school = $this->createSchoolIfNotExists($row['school']);
-                        }
-
-                        $childrenDetails = [
-                            'first_name' => $name['firstname'],
-                            'last_name' => isset($name['lastname']) ? $name['lastname'] : null,
-                            'sch_id' => $school->sch_id,
-                            'graduation_year' => isset($row['graduation_year']) ? $row['graduation_year'] : null,
-                            'lead_id' => $row['lead'],
-                            'event_id' => isset($row['event']) && $row['lead'] == 'LS004' ? $row['event'] : null,
-                            'eduf_id' => isset($row['edufair'])  && $row['lead'] == 'LS018' ? $row['edufair'] : null,
-                        ];
-
-                        isset($row['joined_date']) ? $childrenDetails['created_at'] = $row['joined_date'] : null;
-
-                        $roleId = Role::whereRaw('LOWER(role_name) = (?)', ['student'])->first();
-
-                        $children = UserClient::create($childrenDetails);
-                        $children->roles()->attach($roleId);
-                        $parent->childrens()->attach($children);
-                    }
-
-                    $childrenIds[] = $children['id'];
-                }
-
-                if (isset($row['interested_program'])) {
-                    $this->syncInterestProgram($row['interested_program'], $parent, $joinedDate);
-                    $children != null ?  $this->syncInterestProgram($row['interested_program'], $children, $joinedDate) : null;
-                }
-
-                // Sync country of study abroad
-                if (isset($row['destination_country'])) {
-                    $this->syncDestinationCountry($row['destination_country'], $parent);
-                    $children != null ?  $this->syncDestinationCountry($row['destination_country'], $children) : null;
-                }
-                
-
-               
-                $parentIds[] = $parent['id'];
-
-                $logDetails[] = [
-                    'client_id' => $parent['id']
-                ];
+                $childrenIds[] = $children['id'];
             }
-            # trigger to verifying parent
-            count($parentIds) > 0 ? ProcessVerifyClientParent::dispatch($parentIds)->onQueue('verifying-client-parent') : null;
-            
-            # trigger to verifying children
-            count($childrenIds) > 0 ? ProcessVerifyClient::dispatch($childrenIds)->onQueue('verifying-client') : null;
 
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Import parent failed : ' . $e->getMessage() . ' ' . $e->getLine());
+            if (isset($row['interested_program'])) {
+                $this->syncInterestProgram($row['interested_program'], $parent, $joinedDate);
+                $children != null ?  $this->syncInterestProgram($row['interested_program'], $children, $joinedDate) : null;
+            }
+
+            // Sync country of study abroad
+            if (isset($row['destination_country'])) {
+                $this->syncDestinationCountry($row['destination_country'], $parent);
+                $children != null ?  $this->syncDestinationCountry($row['destination_country'], $children) : null;
+            }
+            
+
+            
+            $parentIds[] = $parent['id'];
+
+            $logDetails[] = [
+                'client_id' => $parent['id']
+            ];
         }
+        # trigger to verifying parent
+        count($parentIds) > 0 ? ProcessVerifyClientParent::dispatch($parentIds)->onQueue('verifying-client-parent') : null;
+        
+        # trigger to verifying children
+        count($childrenIds) > 0 ? ProcessVerifyClient::dispatch($childrenIds)->onQueue('verifying-client') : null;
+
 
         $auth = Cache::has('auth') ? Cache::get('auth')->first_name . ' ' . Cache::get('auth')->last_name : 'unknown';
 
@@ -362,12 +355,12 @@ class ParentImport extends ToCollectionImport implements SkipsOnFailure
      */
     public function chunkSize(): int
     {
-        return 10;
+        return 50;
     }
 
     public function batchSize(): int
     {
-        return 10;
+        return 50;
     }
 
 }

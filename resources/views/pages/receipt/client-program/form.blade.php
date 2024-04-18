@@ -748,6 +748,7 @@
         function downloadFile(url, type) {
 
             var selectedDirector = $("input[name=pic_sign]:checked").val();
+            
             if (selectedDirector == null) {
                 alert('Please choose the director');
                 return false;
