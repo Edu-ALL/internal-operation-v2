@@ -497,10 +497,10 @@ class ExtClientController extends Controller
             'user' => 'nullable',
             'fullname' => 'required',
             'mail' => 'required|email',
-            'phone' => 'required',
+            'phone' => 'required|different:secondary_phone',
             'secondary_name' => 'required_if:have_child,true',
             'secondary_email' => 'nullable|email',
-            'secondary_phone' => 'nullable',
+            'secondary_phone' => 'nullable|different:phone',
             'school_id' => [
                 'nullable',
                 $request->school_id != 'new' ? 'exists:tbl_sch,sch_id' : null
@@ -1297,10 +1297,11 @@ class ExtClientController extends Controller
             'phone' => [
                 'required',
                 Rule::unique('tbl_client')->ignore($requestUpdateClientEvent->client->id),
+                'different:secondary_phone'
             ],
             'secondary_name' => 'required_if:have_child,true',
             'secondary_email' => 'nullable|email',
-            'secondary_phone' => 'nullable',
+            'secondary_phone' => 'nullable|different:phone',
             'school_id' => [
                 'nullable',
                 $request->school_id != 'new' ? 'exists:tbl_sch,sch_id' : null
