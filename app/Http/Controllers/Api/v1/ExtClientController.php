@@ -497,10 +497,10 @@ class ExtClientController extends Controller
             'user' => 'nullable',
             'fullname' => 'required',
             'mail' => 'required|email',
-            'phone' => 'required',
+            'phone' => 'required|different:secondary_phone',
             'secondary_name' => 'required_if:have_child,true',
             'secondary_email' => 'nullable|email',
-            'secondary_phone' => 'nullable',
+            'secondary_phone' => 'nullable|different:phone',
             'school_id' => [
                 'nullable',
                 $request->school_id != 'new' ? 'exists:tbl_sch,sch_id' : null
@@ -624,6 +624,12 @@ class ExtClientController extends Controller
                         if ($parent->id == $studentId) {
 
                             throw new Exception('Client ID and Child ID has the same value');
+                        }
+
+                        # catch if studentId is not from a valid student but from client with role parent
+                        if ($student->roles()->where('role_name', 'Parent')->exists()) {
+
+                            throw new Exception('We cannot continue the process because the studentId was filled with Client that has parent role.');
                         }
 
                         $this->storeRelationship($parent, $student);
@@ -1297,10 +1303,11 @@ class ExtClientController extends Controller
             'phone' => [
                 'required',
                 Rule::unique('tbl_client')->ignore($requestUpdateClientEvent->client->id),
+                'different:secondary_phone'
             ],
             'secondary_name' => 'required_if:have_child,true',
             'secondary_email' => 'nullable|email',
-            'secondary_phone' => 'nullable',
+            'secondary_phone' => 'nullable|different:phone',
             'school_id' => [
                 'nullable',
                 $request->school_id != 'new' ? 'exists:tbl_sch,sch_id' : null
@@ -1411,6 +1418,18 @@ class ExtClientController extends Controller
 
                         $student = $this->storeStudent($validatedStudent);
                         $studentId = $student->id;
+
+                        # prevent client_id and child_id on client event has the same value
+                        if ($parent->id == $studentId) {
+
+                            throw new Exception('Client ID and Child ID has the same value');
+                        }
+
+                        # catch if studentId is not from a valid student but from client with role parent
+                        if ($student->roles()->where('role_name', 'Parent')->exists()) {
+
+                            throw new Exception('We cannot continue the process because the studentId was filled with Client that has parent role.');
+                        }
 
                         $this->storeRelationship($parent, $student);
                         
