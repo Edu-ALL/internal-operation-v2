@@ -568,6 +568,7 @@
         axios.get('{{ url('api/digital/detail/') }}/' + month + '/type-lead/' + type + '/division/' + depart)
             .then((response) => {
                 var result = response.data
+                
 
                 $('#tbody-lead-detail').html(result.html_ctx)
 
