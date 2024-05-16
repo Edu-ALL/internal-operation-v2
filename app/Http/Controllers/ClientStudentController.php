@@ -1215,6 +1215,7 @@ class ClientStudentController extends ClientController
 
             foreach ($clientIds as $clientId) {
 
+
                 if (array_search($clientId, $picDetails)) {
                     continue;
                 }
