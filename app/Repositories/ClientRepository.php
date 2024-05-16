@@ -268,7 +268,7 @@ class ClientRepository implements ClientRepositoryInterface
 
     public function getNewLeads($asDatatables = false, $month = null, $advanced_filter = [])
     {
-        // return UserClient::all();
+        
         # new client that havent offering our program
         $query = Client::select([
                 'client.*',
@@ -292,7 +292,6 @@ class ClientRepository implements ClientRepositoryInterface
                             });
                     });
             })->
-            // doesntHave('clientProgram')->
             when($month, function ($subQuery) use ($month) {
                 $subQuery->whereMonth('client.created_at', date('m', strtotime($month)))->whereYear('client.created_at', date('Y', strtotime($month)));
             })->
@@ -320,7 +319,7 @@ class ClientRepository implements ClientRepositoryInterface
             when(!empty($advanced_filter['active_status']), function ($querySearch) use ($advanced_filter) {
                 $querySearch->whereIn('client.st_statusact', $advanced_filter['active_status']);
             }, function ($subQuery) {
-                $subQuery->where('client.st_statusact', 1);
+                $subQuery->whereIn('client.st_statusact', [1]);
             })->
             when(!empty($advanced_filter['start_joined_date']) && empty($advanced_filter['end_joined_date']), function ($querySearch) use ($advanced_filter) {
                 $querySearch->whereDate('client.created_at', '>=', $advanced_filter['start_joined_date']);

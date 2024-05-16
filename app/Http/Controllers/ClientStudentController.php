@@ -119,6 +119,8 @@ class ClientStudentController extends ClientController
 
     public function index(Request $request)
     {
+
+        
         if ($request->ajax()) {
 
             $statusClient = $request->get('st');
@@ -1214,6 +1216,11 @@ class ClientStudentController extends ClientController
         try {
 
             foreach ($clientIds as $clientId) {
+
+                if (array_search($clientId, $picDetails)) {
+                    continue;
+                }
+
                 $picDetails[] = [
                     'client_id' => $clientId,
                     'user_id' => $pic,
@@ -1224,6 +1231,7 @@ class ClientStudentController extends ClientController
                 if ($client = $this->clientRepository->checkActivePICByClient($clientId)) 
                     $this->clientRepository->inactivePreviousPIC($client);
             }
+
 
             $this->clientRepository->insertPicClient($picDetails);
             

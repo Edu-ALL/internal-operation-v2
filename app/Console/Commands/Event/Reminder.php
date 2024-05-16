@@ -103,8 +103,10 @@ class Reminder extends Command
                     'eventLocation' => $event->event_location,
                 ]
             ];
-
-            ProcessEmailReminderReg::dispatch($passedData)->onQueue('reminder-mail');
+            
+            if($client->mail != null){
+                ProcessEmailReminderReg::dispatch($passedData)->onQueue('reminder-mail');
+            }
 
 
             $progressBar->advance();

@@ -62,13 +62,16 @@ class ResendMail extends Command
 
                 $logId = $detail->id;
                 $category = $detail->category;
-
-                # basic info
-                $clientEventId = $detail->clientevent_id;
-                $clientEvent = $this->clientEventRepository->getClientEventById($clientEventId);
-                $eventName = $clientEvent->event->event_title;
-                $client = $clientEvent->client;
-                $full_name = $client->full_name;
+                
+                
+                if($detail->clientevent_id != null){
+                    # basic info
+                    $clientEventId = $detail->clientevent_id;
+                    $clientEvent = $this->clientEventRepository->getClientEventById($clientEventId);
+                    $eventName = $clientEvent->event->event_title;
+                    $client = $clientEvent->client;
+                    $full_name = $client->full_name;
+                }
 
                 
                 switch ($category) {
