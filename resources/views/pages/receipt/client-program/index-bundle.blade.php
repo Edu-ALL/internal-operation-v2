@@ -75,25 +75,6 @@
                 'pageLength', {
                     extend: 'excel',
                     text: 'Export to Excel',
-                    exportOptions: {
-                        format: {
-                            body: function (data, row, column, node){
-                                var clearHtml = '';
-                                var result = '';
-                                if(column === 2){
-                                    clearHtml = data.replace(/<[^>]*>?/gm, '');
-                                    if (clearHtml.indexOf('{}') === -1) {
-                                        result = clearHtml.replace(/{.*}/, '');
-                                    }
-                                }else if(column === 8){
-                                    result = data.replace(/<[^>]*>?/gm, '');
-                                }else{
-                                    result = data;
-                                }
-                                return result;
-                            }
-                        }
-                    },
                 }
             ],
             order: [[6, 'desc']],
@@ -117,15 +98,6 @@
                 },
                 {
                     data: 'program_name',
-                    name: 'program.program_name',
-                    render: function(data, type, row, meta) {
-                                    if(row.bundling_id !== null){
-                                        bundling_id = row.bundling_id.substring(0, 3).toUpperCase();
-                                    }
-
-                                    return row.is_bundle > 0 ? data + ' <span class="badge text-bg-success" style="font-size:8px";>{Bundle '+ bundling_id +'}</span>' : data;
-                                }
-
                 },
                 {
                     data: 'receipt_id',
@@ -157,7 +129,7 @@
                     render: function(data, type, row) {
 
                         return '<a href="{{ url('receipt/client-program/') }}/' + data +
-                            '" class="btn btn-sm btn-outline-warning"><i class="bi bi-eye"></i></a>'
+                            '?b=true" class="btn btn-sm btn-outline-warning"><i class="bi bi-eye"></i></a>'
                     }
                 }
             ]

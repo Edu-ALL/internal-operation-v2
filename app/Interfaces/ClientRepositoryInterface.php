@@ -46,6 +46,8 @@ interface ClientRepositoryInterface
 
     public function addInterestProgram($studentId, $interestProgram);
     public function removeInterestProgram($studentId, $interstProgram, $progId);
+    public function getDataParentsByChildId($childId);
+
     /* ~ END */
 
     /* trash */
@@ -132,5 +134,7 @@ interface ClientRepositoryInterface
 
     # API
     public function getClientByTicket($ticket_no);
+    public function getClientByUUIDforAssessment($uuid);
+
     
 }

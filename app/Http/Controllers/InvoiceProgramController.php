@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAttachmentRequest;
+use App\Http\Requests\StoreInvoiceProgramBundleRequest;
+use App\Http\Requests\StoreInvoiceProgramBundlingRequest;
 use App\Http\Requests\StoreInvoiceProgramRequest;
 use App\Http\Traits\CreateInvoiceIdTrait;
 use App\Http\Traits\LoggingTrait;
@@ -75,6 +77,7 @@ class InvoiceProgramController extends Controller
     {
         $clientProgId = $request->route('client_program');
         $clientProg = $this->clientProgramRepository->getClientProgramById($clientProgId);
+        
         $invoice = $this->invoiceProgramRepository->getInvoiceByClientProgId($clientProgId);
 
         return view('pages.invoice.client-program.form')->with(
@@ -90,6 +93,12 @@ class InvoiceProgramController extends Controller
     {
         $clientProgId = $request->clientprog_id;
         $clientProg = $this->clientProgramRepository->getClientProgramById($clientProgId);
+
+        # validation invoice bundle
+        # master invoice bundle must be created first
+        if($request->is_bundle > 0 && !isset($clientProg->bundlingDetail->bundling->invoice_b2c)){
+            return Redirect::to('invoice/client-program/create?prog=' . $request->clientprog_id)->withError('Create master invoice bundle first!');
+        }
 
         $raw_currency = [];
         $raw_currency[0] = $request->currency;
@@ -204,9 +213,28 @@ class InvoiceProgramController extends Controller
         try {
 
             $last_id = InvoiceProgram::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->max(DB::raw('substr(inv_id, 1, 4)'));
-
             # Use Trait Create Invoice Id
             $inv_id = $this->getInvoiceId($last_id, $clientProg->prog_id, $invoiceDetails['created_at']);
+            
+            if($request->is_bundle > 0){
+                $last_id = InvoiceProgram::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->where('bundling_id', $clientProg->bundlingDetail->bundling_id)->max(DB::raw('substr(inv_id, 1, 4)'));
+                
+                $bundlingDetails = $this->clientProgramRepository->getBundleProgramDetailByBundlingId($clientProg->bundlingDetail->bundling_id);
+
+                $clientIdsBundle = $incrementBundle = [];
+                $is_cross_client = false;
+                
+                foreach ($bundlingDetails as $key => $bundlingDetail) {
+                    $incrementBundle[$bundlingDetail->client_program->clientprog_id] = $key + 1;
+                    $clientIdsBundle[] = $bundlingDetail->client_program->client->id;
+                }
+
+                if(count(array_count_values($clientIdsBundle)) > 1)
+                    $is_cross_client = true;
+
+                # Use Trait Create Invoice Id
+                $inv_id = $this->getInvoiceId($last_id, $clientProg->prog_id, $invoiceDetails['created_at'], ['is_bundle' => $request->is_bundle, 'is_cross_client' => $is_cross_client, 'increment_bundle' => $incrementBundle[$clientProgId]]);
+            }
 
             $invoiceProgramCreated = $this->invoiceProgramRepository->createInvoice(['inv_id' => $inv_id, 'inv_status' => 1] + $invoiceDetails);
             // $this->invoiceProgramRepository->createInvoice(['inv_id' => $inv_id, 'inv_status' => 0] + $invoiceDetails);
@@ -245,7 +273,7 @@ class InvoiceProgramController extends Controller
         } catch (Exception $e) {
 
             DB::rollBack();
-            Log::error('Store invoice program failed : ' . $e->getMessage());
+            Log::error('Store invoice program failed : ' . $e->getMessage() . ' | Line: ' . $e->getLine());
             return Redirect::to('invoice/client-program/create?prog=' . $request->clientprog_id)->withError('Failed to store invoice program');
         }
 
@@ -259,10 +287,15 @@ class InvoiceProgramController extends Controller
     public function create(Request $request)
     {
         # call GET parameters
+        
+        if(isset($request->bundle) && $request->bundle)
+            return app('App\Http\Controllers\InvoiceProgramBundleController')->createBundle($request->bundle);
+
         $incomingRequestProg = $request->prog;
         
-        if (!isset($incomingRequestProg) or !$clientProg = $this->clientProgramRepository->getClientProgramById($incomingRequestProg))
+        if (!isset($incomingRequestProg) or !$clientProg = $this->clientProgramRepository->getClientProgramById($incomingRequestProg)){
             return Redirect::to('invoice/client-program?s=needed')->withError('We cannot continue the process at this time. Please try again later.');
+        }
         
 
         return view('pages.invoice.client-program.form')->with(
@@ -411,6 +444,27 @@ class InvoiceProgramController extends Controller
                 # Use Trait Create Invoice Id
                 $new_inv_id = $this->getInvoiceId($last_id, $invoice->clientprog->prog_id, $invoiceDetails['created_at']);
                 $invoiceDetails['inv_id'] = $new_inv_id;
+
+                if($request->is_bundle > 0){
+                    $last_id = InvoiceProgram::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->where('bundling_id', $invoice->clientprog->bundlingDetail->bundling_id)->max(DB::raw('substr(inv_id, 1, 4)'));
+                    
+                    $bundlingDetails = $this->clientProgramRepository->getBundleProgramDetailByBundlingId($invoice->clientprog->bundlingDetail->bundling_id);
+    
+                    $clientIdsBundle = $incrementBundle = [];
+                    $is_cross_client = false;
+                    
+                    foreach ($bundlingDetails as $key => $bundlingDetail) {
+                        $incrementBundle[$bundlingDetail->client_program->clientprog_id] = $key + 1;
+                        $clientIdsBundle[] = $bundlingDetail->client_program->client->id;
+                    }
+    
+                    if(count(array_count_values($clientIdsBundle)) > 1)
+                        $is_cross_client = true;
+    
+                    # Use Trait Create Invoice Id
+                    $new_inv_id = $this->getInvoiceId($last_id, $invoice->clientprog->prog_id, $invoiceDetails['created_at'], ['is_bundle' => $request->is_bundle, 'is_cross_client' => $is_cross_client, 'increment_bundle' => $incrementBundle[$clientProgId]]);
+                    $invoiceDetails['inv_id'] = $new_inv_id;
+                }
             }
 
             $this->invoiceProgramRepository->updateInvoice($inv_id, $invoiceDetails);
@@ -940,4 +994,5 @@ class InvoiceProgramController extends Controller
 
         return response()->json(['status' => 'success', 'message' => 'Success Update Email Client'], 200);
     }
+
 }

@@ -26,6 +26,7 @@ class Bundling extends Model
         'uuid',
     ];
 
+ 
     /**
      * 
      * Get the invoice b2c for the bundling
@@ -39,6 +40,10 @@ class Bundling extends Model
     public function details(): HasMany
     {
         return $this->hasMany(BundlingDetail::class, 'bundling_id', 'uuid');
+    }
+
+    public function first_detail() {
+        return $this->hasOne(BundlingDetail::class, 'bundling_id', 'uuid')->oldestOfMany();
     }
 
 }

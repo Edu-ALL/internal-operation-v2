@@ -174,9 +174,6 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 ]);
 
         return Datatables::eloquent($model)->
-            // addColumn('is_bundle', function ($query) {
-            //     return $query->bundlingDetail()->count();
-            // })->
             addColumn('program_name', function (ClientProgram $clientProgram) {
                 return $clientProgram->program->program_name;
             })->
@@ -215,6 +212,12 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 }
 
                 return $conv_lead;
+            })->
+            addColumn('is_bundle', function ($query) {
+                return $query->bundlingDetail()->count();
+            })->
+            addColumn('bundling_id', function ($query) {
+                return $query->bundlingDetail()->count() > 0 ? $query->bundlingDetail->bundling_id : null;
             })->
             filterColumn('conversion_lead', function ($query, $keyword) {
                 $sql = "(CASE 
@@ -404,9 +407,18 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
 
         return Datatables::eloquent($model)->
             // rawColumns(['strip_tag_notes'])->
-            // addColumn('is_bundle', function ($query) {
-            //     return $query->bundlingDetail()->count();
-            // })->
+            addColumn('custom_clientprog_id', function ($query) {
+                return 'CP-' . $query->clientprog_id;
+            })->
+            addColumn('is_bundle', function ($query) {
+                return $query->bundlingDetail()->count();
+            })->
+            addColumn('bundling_id', function ($query) {
+                return $query->bundlingDetail()->count() > 0 ? $query->bundlingDetail->first()->bundling_id : null;
+            })->
+            addColumn('has_invoice', function ($query) {
+                return $query->invoice()->count();
+            })->
             filterColumn(
                 'status',
                 function ($query, $keyword) {
@@ -428,7 +440,11 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                     END) like ?';
                     $query->whereRaw($sql, ["%{$keyword}%"]);
                 }
-            )->make(true);
+            )->filterColumn('custom_clientprog_id', function ($query, $keyword) {
+                $sql = "clientprog_id like ?";
+                $query->whereRaw($sql, ["%{$keyword}%"]);
+            })
+            ->make(true);
     }
 
     public function getAllProgramOnClientProgram()
@@ -1764,12 +1780,30 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
         return ClientProgram::where('prog_running_status', 1)->where('prog_end_date', '<', now())->whereNotNull('prog_end_date')->get();
     }
 
+    // ==================== Bundling ========================
+    public function getBundleProgramByUUID($uuid)
+    {
+        return Bundling::where('uuid', $uuid)->first();
+    }
+
+    public function getBundleProgramDetailByBundlingId($bundlingId)
+    {
+        return BundlingDetail::where('bundling_id', $bundlingId)->get();
+    }
+
     public function createBundleProgram($uuid, $clientProgramDetails)
     {
         Bundling::create(['uuid' => $uuid]);
         return BundlingDetail::insert($clientProgramDetails);
 
     }
+
+    public function deleteBundleProgram($bundling_id)
+    {
+        return Bundling::where('uuid', $bundling_id)->delete();
+    }
+
+    // ===================== End Bundling ====================
 
     # 
 

@@ -24,7 +24,9 @@ use App\Models\PicClient;
 use App\Models\University;
 use App\Models\User;
 use App\Models\ViewRawClient;
+use Exception;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -257,6 +259,24 @@ class ClientRepository implements ClientRepositoryInterface
                         break;
                 }
                 return '<a href="'. url('client/board?name='.$client->full_name) .'" target="_blank">'.$message.'</a>';
+            })->
+            addColumn('took_ia', function ($data) {
+                $endpoint = env('EDUALL_ASSESSMENT_URL') . 'api/get/took-ia/' . $data->uuid;
+    
+                try {
+                    # create 
+                    $response = Http::get($endpoint);
+        
+                    # catch when sending the request to $endpoints failed
+                    if ($response->failed() ) {
+                        return 'error';
+                    }
+
+                } catch (Exception $e) {
+                    return 'error';
+                }
+    
+                return isset($response['data']) ? $response['data'] : 0;
             })->
             rawColumns(['followup_status', 'address'])->
             filterColumn('parent_name', function ($query, $keyword) {
@@ -1363,6 +1383,7 @@ class ClientRepository implements ClientRepositoryInterface
         return Client::whereMonth('dob', date('m', strtotime($month)))->whereHas('roles', function ($query) {
                     $query->where('role_name', 'Student');
                 })->where('st_statusact', 1)->
+                orderBy(DB::raw('dayofmonth(dob)'), 'asc')->
                 isNotSalesAdmin()->
                 isUsingAPI()->
                 get();
@@ -1962,7 +1983,7 @@ class ClientRepository implements ClientRepositoryInterface
                 ],
                 'education' => [
                     'school' => $child->school->sch_name,
-                    'grade' => $child->st_grade,
+                    'grade' => $child->gradeNow,
                 ],
                 'country' => $child->destinationCountries->pluck('name')->toArray()
             ],
@@ -1972,5 +1993,44 @@ class ClientRepository implements ClientRepositoryInterface
             ]
         ];
 
+    }
+
+    public function getClientByUUIDforAssessment($uuid)
+    {
+        $child = UserClient::where('uuid', $uuid)->first();
+
+        return [
+            'client' => [
+                'id' => $child->id,
+                'uuid_crm' => $child->uuid,
+                'is_vip' => false,
+                'took_initial_assessment' => 0,
+                'full_name' => $child->full_name,
+                'email' => $child->mail,
+                'phone' => $child->phone,
+                'address' => [
+                    'state' => $child->state,
+                    'city' => $child->city,
+                    'address' => $child->address
+                ],
+                'education' => [
+                    'school' => isset($child->school) ? $child->school->sch_name : null,
+                    'grade' => $child->gradeNow,
+                ],
+                'country' => $child->destinationCountries->pluck('name')->toArray()
+            ],
+            'clientevent' => [
+                'id' => null,
+                'ticket_id' => null,
+            ]
+        ];
+
+    }
+
+    # use for modal reminder invoice bundle
+    public function getDataParentsByChildId($childId)
+    {
+        $child = UserClient::find($childId);
+        return $child->parents()->get();
     }
 }

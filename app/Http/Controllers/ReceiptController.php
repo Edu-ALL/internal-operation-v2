@@ -45,8 +45,14 @@ class ReceiptController extends Controller
 
     public function index(Request $request)
     {
+        $isBundle = $request->get('b') !== NULL ? true : false;
+
         if ($request->ajax())
-            return $this->receiptRepository->getAllReceiptByStatusDataTables();
+ 
+            return $this->receiptRepository->getAllReceiptByStatusDataTables($isBundle);
+
+        if ($isBundle)
+            return view('pages.receipt.client-program.index-bundle');
 
         return view('pages.receipt.client-program.index');
     }
@@ -55,13 +61,25 @@ class ReceiptController extends Controller
     {
         $receipt_id = $request->route('receipt');
         $receipt = $this->receiptRepository->getReceiptById($receipt_id);
+        
+        $isBundle = $request->get('b') !== NULL ? true : false;
 
-        return view('pages.receipt.client-program.form')->with(
-            [
-                'client_prog' => $receipt->invoiceProgram->clientProg,
-                'receipt' => $receipt
-            ]
-        );
+        if($isBundle){
+            return view('pages.receipt.client-program.form-bundle')->with(
+                [
+                    'bundle' => $receipt->invoiceProgram->bundling,
+                    'receipt' => $receipt
+                    ]
+            );
+        }else{
+            return view('pages.receipt.client-program.form')->with(
+                [
+                    'client_prog' => $receipt->invoiceProgram->clientProg,
+                    'receipt' => $receipt
+                ]
+            );
+        }
+
     }
 
     public function store(StoreReceiptRequest $request)
@@ -86,6 +104,13 @@ class ReceiptController extends Controller
         // $receiptDetails['updated_at'] = Carbon::now();
 
         $client_prog = $this->clientProgramRepository->getClientProgramById($request->clientprog_id);
+        
+        # validation child receipt bundle
+        # master receipt bundle must be created first
+        if($request->is_child_program_bundle > 0 && !isset($client_prog->bundlingDetail->bundling->invoice_b2c->receipt)){
+            return Redirect::to('invoice/client-program/' . $request->clientprog_id)->withError('Create master receipt bundle first!');
+        }
+
         $invoice = $client_prog->invoice()->first();
 
         # generate receipt id
@@ -93,6 +118,27 @@ class ReceiptController extends Controller
 
         # Use Trait Create Invoice Id
         $receiptDetails['receipt_id'] = $this->getLatestReceiptId($last_id, $client_prog->prog_id, $receiptDetails);
+
+        if($request->is_child_program_bundle > 0){
+            $last_id = Receipt::whereMonth('created_at', isset($request->receipt_date) ? date('m', strtotime($request->receipt_date)) : date('m'))->whereYear('created_at', isset($request->receipt_date) ? date('Y', strtotime($request->receipt_date)) : date('Y'))->whereRelation('invoiceProgram', 'bundling_id', $client_prog->bundlingDetail->bundling_id)->max(DB::raw('substr(receipt_id, 1, 4)'));
+           
+            $bundlingDetails = $this->clientProgramRepository->getBundleProgramDetailByBundlingId($client_prog->bundlingDetail->bundling_id);
+
+            $clientIdsBundle = $incrementBundle = [];
+            $is_cross_client = false;
+            
+            foreach ($bundlingDetails as $key => $bundlingDetail) {
+                $incrementBundle[$bundlingDetail->client_program->clientprog_id] = $key + 1;
+                $clientIdsBundle[] = $bundlingDetail->client_program->client->id;
+            }
+    
+            if(count(array_count_values($clientIdsBundle)) > 1)
+                $is_cross_client = true;
+
+            # Use Trait Create Invoice Id
+            $receiptDetails['receipt_id'] = $this->getLatestReceiptId($last_id, 'BDL', $receiptDetails, ['is_bundle' => 1, 'is_cross_client' => $is_cross_client, 'increment_bundle' => $incrementBundle[$invoice->clientprog->clientprog_id]]);
+        
+        }
 
         $receiptDetails['inv_id'] = $invoice->inv_id;
         $invoice_payment_method = $invoice->inv_paymentmethod;
@@ -162,8 +208,10 @@ class ReceiptController extends Controller
     {
         
         $receiptId = $request->route('receipt');
-        $receipt = $this->receiptRepository->getReceiptById($receiptId);    
+        $receipt = $this->receiptRepository->getReceiptById($receiptId);      
         
+        $isBundle = $request->get('b') !== NULL ? true : false;
+
         # directors name
         $choosen_director = $request->get('selectedDirectorMail');
         $name = $this->getDirectorByEmail($choosen_director);
@@ -172,10 +220,17 @@ class ReceiptController extends Controller
 
         $file_name = str_replace('/', '-', $receipt->receipt_id) . '-' . ($type == 'idr' ? $type : 'other') . '.pdf';
 
-        if ($type == "idr")
+        if ($type == "idr"){
             $view = 'pages.receipt.client-program.export.receipt-pdf';
-        else
+            if($isBundle){
+                $view = 'pages.receipt.client-program.export.receipt-bundle-pdf';
+            }
+        }else{
             $view = 'pages.receipt.client-program.export.receipt-pdf-foreign';
+            if($isBundle){
+                $view = 'pages.receipt.client-program.export.receipt-bundle-pdf-foreign';
+            }
+        }
 
             
         # store to receipt attachment
@@ -205,14 +260,15 @@ class ReceiptController extends Controller
         # generate file 
         try {
             # update download status on tbl_receipt
-            if ($type == "idr")
-                $receipt->download_idr = 1;
-            else
-                $receipt->download_other = 1;
 
-            $receipt->save();
+            if ($type == "idr"){
+                $this->receiptRepository->updateReceipt($receiptId, ['download_idr' => 1]);
+            }else{
+                $this->receiptRepository->updateReceipt($receiptId, ['download_other' => 1]);
+            }
+            
             DB::commit();
-
+            
             $companyDetail = [
                 'name' => env('ALLIN_COMPANY'),
                 'address' => env('ALLIN_ADDRESS'),
@@ -224,7 +280,7 @@ class ReceiptController extends Controller
 
         } catch (Exception $e) {
 
-            Log::info('Export receipt failed: ' . $e->getMessage());
+            Log::error('Export receipt failed: ' . $e->getMessage() . ' Line:' . $e->getLine());
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -243,6 +299,9 @@ class ReceiptController extends Controller
         $receipt_id = $request->route('receipt');
         $receipt = $this->receiptRepository->getReceiptById($receipt_id);
         $currency = $request->currency;
+
+        $isBundle = $request->get('b') !== NULL ? true : false;
+
 
         if ($receipt->receiptAttachment()->where('currency', $currency)->whereNotNull('attachment')->where('sign_status', 'not yet')->first())
             return Redirect::back()->withError('You already upload the receipt.');
@@ -281,6 +340,9 @@ class ReceiptController extends Controller
         # create log success
         $this->logSuccess('upload', null, 'Receipt Client Program', Auth::user()->first_name . ' '. Auth::user()->last_name, ['receipt_id' => $receipt_id]);
 
+        if($isBundle){
+            return Redirect::to('receipt/client-program/' . $receipt_id . '?b=true')->withSuccess('Receipt has been uploaded.');
+        }
         return Redirect::to('receipt/client-program/' . $receipt_id)->withSuccess('Receipt has been uploaded.');
     }
 
@@ -288,7 +350,8 @@ class ReceiptController extends Controller
     {
         $receipt_id = $request->route('receipt');
         $receipt = $this->receiptRepository->getReceiptById($receipt_id);
-        
+        $isBundle = $request->get('b') !== NULL ? true : false;
+
         $type = $request->get('type');
         $info = $receipt->receiptAttachment()->where('currency', $type)->first();
         $to = $info->recipient;
@@ -297,7 +360,7 @@ class ReceiptController extends Controller
         if ($type == "idr")
             $view = 'pages.receipt.client-program.export.receipt-pdf';
         else
-            $view = 'pages.receipt.client-program.export.receipt-pdf-foreign';
+            $view = 'pages.receipt.client-program.export.receipt-bundle-pdf-foreign';
 
         $companyDetail = [
             'name' => env('ALLIN_COMPANY'),
@@ -312,10 +375,16 @@ class ReceiptController extends Controller
         $data['param'] = [
             'receipt' => $receipt,
             'currency' => $type,
-            'fullname' => $receipt->invoiceProgram->clientprog->client->full_name,
-            'program_name' => $receipt->invoiceProgram->clientprog->program->program_name,
             'receipt_date' => date('d F Y', strtotime($receipt->created_at))
         ];
+
+        if($isBundle){
+            $data['param']['fullname'] = $receipt->invoiceProgram->bundling->first_detail->client_program->client->full_name;
+            $data['param']['program_name'] = $receipt->invoiceProgram->bundling->first_detail->client_program->program->program_name . ' (Bundle Package)';
+        }else{
+            $data['param']['fullname'] = $receipt->invoiceProgram->clientprog->client->full_name;
+            $data['param']['program_name'] = $receipt->invoiceProgram->clientprog->program->program_name;
+        }
 
         DB::beginTransaction();
         try {
@@ -440,16 +509,32 @@ class ReceiptController extends Controller
         $receipt = $this->receiptRepository->getReceiptById($receipt_id);
         $currency = $request->route('currency');
         $attachment = $receipt->receiptAttachment()->where('currency', $currency)->first();
+        $isBundle = $request->get('b') !== NULL ? true : false;
 
-        $pic_mail = $receipt->invoiceProgram->clientprog->internalPic->email;
+        if($isBundle){
+            $data['program_name'] = $receipt->invoiceProgram->bundling->first_detail->client_program->program->program_name . ' (Bundle Package)';
+            $pic_mail = $receipt->invoiceProgram->bundling->first_detail->client_program->internalPic->email;
+        }else{
+            $data['program_name'] = $receipt->invoiceProgram->clientprog->program->program_name;
+            $pic_mail = $receipt->invoiceProgram->clientprog->internalPic->email;
+        }
 
         switch ($type_recipient) {
             case 'Parent':
-                $data['email'] = $receipt->invoiceProgram->clientprog->client->parents[0]->mail;
-                $data['recipient'] = $receipt->invoiceProgram->clientprog->client->parents[0]->full_name;
+                if($isBundle){
+                    $data['email'] = $receipt->invoiceProgram->bundling->first_detail->client_program->client->parents[0]->mail;
+                    $data['recipient'] = $receipt->invoiceProgram->bundling->first_detail->client_program->client->parents[0]->full_name;
+                }else{
+                    $data['email'] = $receipt->invoiceProgram->clientprog->client->parents[0]->mail;
+                    $data['recipient'] = $receipt->invoiceProgram->clientprog->client->parents[0]->full_name;
+                }
                 break;
 
             case 'Client':
+                if($isBundle){
+                    $data['email'] = $receipt->invoiceProgram->bundling->first_detail->client_program->client->mail;
+                    $data['recipient'] = $receipt->invoiceProgram->bundling->first_detail->client_program->client->full_name;
+                }
                 $data['email'] = $receipt->invoiceProgram->clientprog->client->mail;
                 $data['recipient'] = $receipt->invoiceProgram->clientprog->client->full_name;
                 break;
@@ -460,7 +545,7 @@ class ReceiptController extends Controller
             env('FINANCE_CC'),
             $pic_mail
         ];
-        $data['program_name'] = $receipt->invoiceProgram->clientprog->program->program_name;
+        
         $data['title'] = "Receipt of program " . $data['program_name'];
 
         # send mail 
@@ -534,5 +619,80 @@ class ReceiptController extends Controller
         }
 
         return response()->json(['status' => 'success', 'message' => 'Success Update Email'], 200);
+    }
+
+
+    // ============ Bundling ==============
+
+    public function storeBundle(StoreReceiptRequest $request)
+    {
+        // return $request->all();
+        // exit;
+        #initialize
+        $identifier = $request->identifier; #invdtl_id
+        $paymethod = $request->paymethod;
+
+        $receiptDetails = $request->only([
+            'rec_currency',
+            'receipt_amount',
+            'receipt_amount_idr',
+            'receipt_date',
+            'receipt_words',
+            'receipt_words_idr',
+            'receipt_method',
+            'receipt_cheque'
+        ]);
+        $receiptDetails['receipt_cat'] = 'student';
+
+        $receiptDetails['created_at'] = $receiptDetails['receipt_date'];
+        // $receiptDetails['updated_at'] = Carbon::now();
+
+        $bundle = $this->clientProgramRepository->getBundleProgramByUUID($request->bundling_id);
+        $invoice = $bundle->invoice_b2c()->first();
+
+        # generate receipt id
+        $last_id = Receipt::whereMonth('created_at', isset($request->receipt_date) ? date('m', strtotime($request->receipt_date)) : date('m'))->whereYear('created_at', isset($request->receipt_date) ? date('Y', strtotime($request->receipt_date)) : date('Y'))->max(DB::raw('substr(receipt_id, 1, 4)'));
+
+        # Use Trait Create Invoice Id
+        $receiptDetails['receipt_id'] = $this->getLatestReceiptId($last_id, 'BDL', $receiptDetails);
+
+        $receiptDetails['inv_id'] = $invoice->inv_id;
+        $invoice_payment_method = $invoice->inv_paymentmethod;
+        if ($invoice_payment_method == "Installment")
+            $receiptDetails['invdtl_id'] = $identifier;
+
+        # validation nominal
+        # to catch if total invoice not equal to total receipt 
+        if ($invoice_payment_method == "Full Payment") {
+
+            $total_invoice = $invoice->inv_totalprice_idr;
+            $total_receipt = $request->receipt_amount_idr;
+        } elseif ($invoice_payment_method == "Installment") {
+
+            $total_invoice = $invoice->invoiceDetail()->where('invdtl_id', $identifier)->first()->invdtl_amountidr;
+            $total_receipt = $request->receipt_amount_idr;
+        }
+
+        if ($total_receipt < $total_invoice)
+            return Redirect::back()->withError('Do double check the amount. Make sure the amount on invoice and the amount on receipt is equal');
+
+        // return $receiptDetails;
+        DB::beginTransaction();
+        try {
+
+            $receiptCreated = $this->receiptRepository->createReceipt($receiptDetails);
+            DB::commit();
+        } catch (Exception $e) {
+
+            DB::rollBack();
+            Log::error('Store receipt failed : ' . $e->getMessage());
+            return Redirect::back()->withError('Failed to create receipt');
+        }
+
+        # store Success
+        # create log success
+        $this->logSuccess('store', 'Form Input', 'Receipt Client Program', Auth::user()->first_name . ' '. Auth::user()->last_name, $receiptCreated);
+
+        return Redirect::to('invoice/client-program/bundle/' . $request->bundling_id)->withSuccess('A receipt has been made');
     }
 }

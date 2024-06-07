@@ -220,6 +220,7 @@
                         <th>Interest Major</th>
                         <th>Joined Date</th>
                         <th>Scholarship Eligible</th>
+                        <th>Assessment</th>
                         <th>Joined Date</th>
                         <th>Last Update</th>
                         <th>Is Active</th>
@@ -228,7 +229,7 @@
                 </thead>
                 <tfoot class="bg-light text-white">
                     <tr>
-                        <td colspan="{{ $st == "new-leads" ? '22' : '21' }}"></td>
+                        <td colspan="{{ $st == "new-leads" ? '23' : '22' }}"></td>
                     </tr>
                 </tfoot>
             </table>
@@ -799,6 +800,23 @@
                         }
                     },
                     {
+                        data: 'took_ia',
+                        className: 'text-center',
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            var link = '{{ env("EDUALL_ASSESSMENT_URL") }}' + 'api/report/' + row.uuid;
+                            if(data !== 'error'){
+                                if(!data){
+                                    return '<h5><i class="bi bi-dash-square-fill text-danger"></i></h5>'
+                                }else{
+                                    return '<a href="'+link+'"><h5><i class="bi bi-check-square-fill text-success"></i></h5></a>'
+                                }
+                            }else{
+                                return data;
+                            }
+                        }
+                    },
+                    {
                         data: 'created_at',
                         searchable: false,
                         className: 'text-center',
@@ -833,11 +851,13 @@
                         defaultContent: '',
                         render: function(data, type, row, meta) {
                             let content = '<div class="d-flex gap-1 justify-content-center">' +
+                                '<small class="btn btn-sm btn-outline-info cursor-pointer copyLinkAssessment" onclick="copyLink(\''+ row.uuid +'\')"><i class="bi bi-card-text"></i></small>' +
                                 '<small class="btn btn-sm btn-outline-warning cursor-pointer editClient" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="More Detail"><i class="bi bi-eye"></i></small>'
                             '</div>';
 
                             if (get_st == 'new-leads' || get_st == 'potential') {
                                 content = '<div class="d-flex gap-1 justify-content-center">' +
+                                    '<small class="btn btn-sm btn-outline-info cursor-pointer copyLinkAssessment" onclick="copyLink(\''+ row.uuid +'\')"><i class="bi bi-card-text"></i></small>'+
                                     '<small data-bs-toggle="tooltip" data-bs-placement="top" ' +
                                     'data-bs-custom-class="custom-tooltip" ' +
                                     'data-bs-title="Delete" class="btn btn-sm btn-outline-danger cursor-pointer deleteClient">' +
@@ -1010,7 +1030,6 @@
                     }
                 });
 
-                console.log(selected);
 
                 if (selected.length > 0) {
                     Swal.fire({
@@ -1164,6 +1183,27 @@
                     swal.close();
                     notification('error', error)
                 })
+        }
+
+        function copyLink(uuid) {
+            
+            // Get the text field
+            var copyText = "{{ env('EDUALL_ASSESSMENT_URL') }}login/" + uuid;
+
+            // Copy the text inside the text field
+            navigator.clipboard.writeText(copyText);
+
+
+            // Alert the copied text
+            // alert("Copied the text: " + copyText.value);
+            Swal.fire({
+                icon: 'success',
+                text: "Assessment successfully copied ",
+                timer: 1500,
+                width:300,
+                showConfirmButton: false,
+            });
+            //    swal("Copied the text: " + copyText.value);
         }
     </script>
 @endpush

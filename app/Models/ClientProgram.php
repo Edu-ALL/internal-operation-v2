@@ -142,6 +142,11 @@ class ClientProgram extends Model
         return $this->belongsTo(Program::class, 'prog_id', 'prog_id');
     }
 
+    public function viewProgram()
+    {
+        return $this->belongsTo(ViewProgram::class, 'prog_id', 'prog_id');
+    }
+
     public function lead()
     {
         return $this->belongsTo(Lead::class, 'lead_id', 'lead_id');
@@ -213,8 +218,8 @@ class ClientProgram extends Model
         return $this->belongsToMany(User::class, 'tbl_pic_client', 'client_id', 'user_id');
     }
 
-    public function bundling() //! detail
+    public function bundlingDetail()
     {
-        return $this->hasMany(BundlingDetail::class, 'clientprog_id', 'clientprog_id');
+        return $this->hasOne(BundlingDetail::class, 'clientprog_id', 'clientprog_id');
     }
 }
