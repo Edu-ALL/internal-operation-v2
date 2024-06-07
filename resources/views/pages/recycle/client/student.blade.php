@@ -373,6 +373,7 @@
                     {
                         data: 'interest_prog',
                         className: 'text-center',
+                        searchable: true,
                         defaultContent: '-'
                     },
                     {
