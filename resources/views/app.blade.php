@@ -21,6 +21,13 @@
     <link href="https://fastly.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     @yield('css')
+    <style>
+        /* This selector targets the editable element (excluding comments). */
+        .ck-editor__editable_inline:not(.ck-comment__input *) {
+            min-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
 
 
     {{-- JS  --}}
@@ -50,7 +57,7 @@
      <!--   referrerpolicy="origin"></script> -->
     <!--<script src="https://cdn.tiny.cloud/1/h7t62ozvqkx2ifkeh051fsy3k9irz7axx1g2zitzpbaqfo8m/tinymce/6/tinymce.min.js"-->
     <!--    referrerpolicy="origin"></script>-->
-    <script src="https://cdn.tiny.cloud/1/6rtskj4e67x7o5h9g4gu406k5ba49e4fzsjcgw2v5ueihahb/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    {{-- <script src="https://cdn.tiny.cloud/1/6rtskj4e67x7o5h9g4gu406k5ba49e4fzsjcgw2v5ueihahb/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script> --}}
     
     <script src="https://fastly.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://fastly.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -171,6 +178,33 @@
 
     <script>
         window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+    </script>
+
+    {{-- Editor --}}
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+    <script>
+        var myEditor;
+
+        document.querySelectorAll( 'textarea' ).forEach(function (element) {
+            ClassicEditor
+                .create( element, {
+                    toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote' ],
+                    heading: {
+                        options: [
+                            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' }
+                        ]
+                    }
+                } )
+                .then( editor => {
+                    console.log('Editor was initialized', editor);
+                    myEditor = editor;
+                })
+                .catch( error => {
+                    console.error( error );
+                } );
+        })        
     </script>
 
     {{-- Tooltip  --}}
@@ -384,16 +418,16 @@
     </script>
 
     {{-- TinyMCE  --}}
-    <script>
-        tinymce.init({
-            strict_loading_mode : true,
-            selector: 'textarea',
-            height: "250",
-            menubar: false,
-            // plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-        });
-    </script>
+    // <script>
+    //     tinymce.init({
+    //         strict_loading_mode : true,
+    //         selector: 'textarea',
+    //         height: "250",
+    //         menubar: false,
+    //         // plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    //         toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+    //     });
+    // </script>
 
     {{-- Select2  --}}
     <script>
