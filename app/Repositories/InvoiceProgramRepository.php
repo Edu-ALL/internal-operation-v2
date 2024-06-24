@@ -93,8 +93,15 @@ class InvoiceProgramRepository implements InvoiceProgramRepositoryInterface
                                 break;
         
                             case "External Edufair":
-                                $eduf_lead = $clientProgram->external_edufair->title;
-                                $conv_lead = "External Edufair - {$eduf_lead}";
+                                $conv_lead = null;
+                                if($clientProgram->eduf_lead_id == NULL){
+                                    return $conv_lead = $clientProgram->lead->main_lead;
+                                }
+                
+                                if ($clientProgram->external_edufair->title != NULL)
+                                    $conv_lead = "External Edufair - " . $clientProgram->external_edufair->title;
+                                else
+                                    $conv_lead = "External Edufair - " . $clientProgram->external_edufair->organizerName;
                                 break;
         
                             case "All-In Event":
