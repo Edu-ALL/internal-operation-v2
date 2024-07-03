@@ -117,7 +117,12 @@ class AuthController extends Controller
                 
             }
             
+<<<<<<< HEAD
             
+=======
+
+           
+>>>>>>> origin/development-v2.8.1
             return redirect()->intended('/dashboard2');
             
         }
