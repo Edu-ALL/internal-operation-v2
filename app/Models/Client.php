@@ -125,11 +125,7 @@ class Client extends Model
 
     public function scopeIsUsingAPI($query)
     {
-<<<<<<< HEAD
         return  $query->when(auth()->guard('api')->user() && Session::get('user_role') == 'Employee', function ($subQuery) {
-=======
-        return $query->when(auth()->guard('api')->user() && Session::get('user_role') == 'Employee', function ($subQuery) {
->>>>>>> origin/development-v2.8.1
             $subQuery->whereHas('handledBy', function ($subQuery_2) {
                 $subQuery_2->where('users.id', auth()->guard('api')->user()->id);
             });
