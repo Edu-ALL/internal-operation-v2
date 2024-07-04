@@ -10,6 +10,7 @@
     "require": {
         "php": "^7.2|^8.0.2|^8.2",
         "ext-gd": "*",
+        "23m/livewire-async": "^0.1.0",
         "arcanedev/log-viewer": "^9.0",
         "ashallendesign/short-url": "^7.6",
         "barryvdh/laravel-debugbar": "^3.9",
@@ -22,6 +23,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "laravolt/indonesia": "^0.34.0",
+        "livewire/livewire": "^2.1",
         "lwwcas/laravel-countries": "^3.3",
         "maatwebsite/excel": "^3.1",
         "mostafaznv/laracache": "^2.3",

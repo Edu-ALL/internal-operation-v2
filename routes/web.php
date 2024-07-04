@@ -11,6 +11,7 @@ use App\Http\Controllers\ClientStudentController;
 use App\Http\Controllers\GoogleSheetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VolunteerController;
+use App\Http\Livewire\Counter;
 use App\Jobs\Client\ProcessDefineCategory;
 use App\Jobs\testQueue;
 use Illuminate\Support\Facades\Artisan;
@@ -31,6 +32,10 @@ use Illuminate\Support\Facades\Session;
 */
 
 # AUTH START --------------------------------
+
+Route::get('/test', function () {
+    return view('pages.dashboard.livewire');
+});
 
 Route::get('/', function () {
     return view('auth.login');
