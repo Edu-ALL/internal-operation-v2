@@ -1,14 +1,18 @@
 <?php
 
 use App\Http\Controllers\Api\v1\DigitalDashboardController;
+use App\Http\Controllers\Api\v2\DigitalDashboardController as DigitalDashboardControllerV2;
 use App\Http\Controllers\Api\v1\ExtClientController;
 use App\Http\Controllers\Api\v1\ExtLeadController;
 use App\Http\Controllers\Api\v1\ExtProgramController;
 use App\Http\Controllers\Api\v1\ExtSalesTrackingController;
 use App\Http\Controllers\Api\v1\ExtUserController;
 use App\Http\Controllers\Api\v1\SalesDashboardController;
+use App\Http\Controllers\Api\v2\SalesDashboardController as SalesDashboardControllerV2;
 use App\Http\Controllers\Api\v1\PartnerDashboardController;
+use App\Http\Controllers\Api\v2\PartnerDashboardController as PartnerDashboardControllerV2;
 use App\Http\Controllers\Api\v1\FinanceDashboardController;
+use App\Http\Controllers\Api\v2\FinanceDashboardController as FinanceDashboardControllerV2;
 use App\Http\Controllers\ClientEventController;
 use App\Http\Controllers\ClientParentController;
 use App\Http\Controllers\ClientStudentController;
@@ -246,6 +250,55 @@ Route::group(['middleware' => 'auth:api', 'prefix' => 'import'], function () {
     Route::get('client-program', [GoogleSheetController::class, 'storeClientProgram']);
 });
 
+# New dashboard
+Route::prefix('v2')->group(function () {
+
+    #sales
+    Route::get('get/client', [SalesDashboardControllerV2::class, 'getClientByMonthAndType']);
+    Route::get('get/client-status', [SalesDashboardControllerV2::class, 'getClientStatus']);
+    Route::get('get/client-program', [SalesDashboardControllerV2::class, 'getClientProgramByMonth']);
+    Route::get('get/successful-program', [SalesDashboardControllerV2::class, 'getSuccessfulProgramByMonth']);
+    Route::get('get/detail/successful-program', [SalesDashboardControllerV2::class, 'getSuccessfulProgramDetailByMonthAndProgram']);
+    Route::get('get/admissions-mentoring', [SalesDashboardControllerV2::class, 'getAdmissionsProgramByMonth']);
+    Route::get('get/initial-consultation', [SalesDashboardControllerV2::class, 'getInitialConsultationByMonth']);
+    Route::get('get/academic-prep', [SalesDashboardControllerV2::class, 'getAcademicPrepByMonth']);
+    Route::get('get/career-exploration', [SalesDashboardControllerV2::class, 'getCareerExplorationByMonth']);
+    Route::get('get/conversion-lead', [SalesDashboardControllerV2::class, 'getConversionLeadByMonth']);
+    Route::get('get/lead/admissions-mentoring', [SalesDashboardControllerV2::class, 'getLeadAdmissionsProgramByMonth']);
+    Route::get('get/lead/academic-prep', [SalesDashboardControllerV2::class, 'getLeadAcademicPrepByMonth']);
+    Route::get('get/lead/career-exploration', [SalesDashboardControllerV2::class, 'getLeadCareerExplorationByMonth']);
+    Route::get('get/detail/client-program', [SalesDashboardControllerV2::class, 'getClientProgramByMonthDetail']);
+    Route::get('get/all-program/target', [SalesDashboardControllerV2::class, 'getAllProgramTargetByMonth']);
+    Route::get('get/program-comparison', [SalesDashboardControllerV2::class, 'compare_program']);
+
+    Route::get('get/client-event', [SalesDashboardControllerV2::class, 'getClientEventByYear']);
+    Route::get('get/outstanding-payment', [DashboardController::class, 'listOustandingPayments']);
+
+
+    #Partnership
+    Route::get('partner/total', [PartnerDashboardControllerV2::class, 'getTotalByMonth']);
+    Route::get('partner/detail', [PartnerDashboardControllerV2::class, 'getPartnerDetailByMonth']);
+    Route::get('partner/agenda', [PartnerDashboardControllerV2::class, 'getSpeakerByDate']);
+    Route::get('partner/partnership-program', [PartnerDashboardControllerV2::class, 'getPartnershipProgramByMonth']);
+    Route::get('partner/partnership-program/detail', [PartnerDashboardControllerV2::class, 'getPartnershipProgramDetailByMonth']);
+    Route::get('partner/partnership-program/program-comparison', [PartnerDashboardControllerV2::class, 'getProgramComparison']);
+
+    #Digital
+    Route::get('digital/all-leads', [DigitalDashboardControllerV2::class, 'getDataLead']);
+    Route::get('digital/leads', [DigitalDashboardControllerV2::class, 'getLeadDigital']);
+    Route::get('digital/detail/type-lead', [DigitalDashboardControllerV2::class, 'getDetailDataLead']);
+    Route::get('digital/detail/lead-source', [DigitalDashboardControllerV2::class, 'getDetailLeadSource']);
+    Route::get('digital/detail/conversion-lead', [DigitalDashboardControllerV2::class, 'getDetailConversionLead']);
+
+    #Finance
+    Route::get('finance/detail', [FinanceDashboardControllerV2::class, 'getFinanceDetailByMonth']);
+    Route::get('finance/total', [FinanceDashboardControllerV2::class, 'getTotalByMonth']);
+    Route::get('finance/outstanding', [FinanceDashboardControllerV2::class, 'getOutstandingPayment']);
+    Route::get('finance/revenue', [FinanceDashboardControllerV2::class, 'getRevenueByYear']);
+    Route::get('finance/revenue/detail', [FinanceDashboardControllerV2::class, 'getRevenueDetailByMonth']);
+    Route::get('finance/outstanding/period', [FinanceDashboardControllerV2::class, 'getOutstandingPaymentByPeriod']);
+
+});
 # Export data to google sheet
 Route::group(['middleware' => 'auth:api', 'prefix' => 'export'], function () {
 
