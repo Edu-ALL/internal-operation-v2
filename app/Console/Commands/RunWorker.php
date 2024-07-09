@@ -47,6 +47,7 @@ class RunWorker extends Command
             'verifying_client_parent',
             'verifying_client_teacher',
             'define-category-client',
+            'get-took-ia',
         ];
 
         Artisan::call('queue:work', [
