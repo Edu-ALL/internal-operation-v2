@@ -2111,4 +2111,9 @@ class ClientRepository implements ClientRepositoryInterface
     {
         return UserClient::where('category', $category)->get();
     }
+
+    public function updateClientByUUID($uuid, array $newDetails)
+    {
+        return tap(UserClient::where('uuid', $uuid))->update($newDetails)->first();
+    }
 }
