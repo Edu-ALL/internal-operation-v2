@@ -756,9 +756,12 @@ class GoogleSheetController extends Controller
                     $data = $this->clientRepository->getNewLeads(false, null, []);
                     break;
                 case 'potential':
+                    Sheets::spreadsheet(env('GOOGLE_SHEET_KEY_EXPORT_DATA'))->sheet('Potentials')->range('A2:AE1000')->clear();
                     $data = $this->clientRepository->getPotentialClients(false, null, []);
                     break;
                 case 'mentee':
+                    Sheets::spreadsheet(env('GOOGLE_SHEET_KEY_EXPORT_DATA'))->sheet('Mentees')->range('A2:AE1000')->clear();
+
                     $data = $this->clientRepository->getExistingMentees(false, null, []);
                     break;
                 case 'non-mentee':
