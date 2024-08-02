@@ -194,6 +194,9 @@ Route::prefix('v1')->group(function () {
     Route::patch('registration/verify/{clientevent_id}', [ExtClientController::class, 'update']);
     Route::get('school', [APISchoolController::class, 'alt_search']);
 
+    # Form embed public registration
+    Route::post('register/public', [ExtClientController::class, 'storePublicRegistration']);
+
     # ----------------------
     # used in other platform
     # ----------------------
@@ -311,4 +314,8 @@ Route::get('/batch/{batchId}', [GoogleSheetController::class, 'findBatch'])->mid
 
 Route::middleware('auth:api')->get('sync/{type}', [GoogleSheetController::class, 'sync']);
 
-Route::middleware('crm.key')->post('assessment/update', [ExtClientController::class, 'updateTookIA']);
+Route::group(['middleware' => 'crm.key'], function () {
+    Route::post('assessment/update', [ExtClientController::class, 'updateTookIA']);
+
+
+});
