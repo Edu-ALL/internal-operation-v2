@@ -948,9 +948,6 @@ class ClientProgramController extends Controller
         if (!$program = $this->programRepository->getProgramByName($programName))
             abort(404);
 
-        if (!$program = $this->programRepository->getProgramByName($programName))
-            abort(404);
-
         $leads = $this->leadRepository->getLeadForFormEmbedEvent();
         $schools = $this->schoolRepository->getAllSchools();
         $tags = $this->tagRepository->getAllTags();
@@ -1149,8 +1146,8 @@ class ClientProgramController extends Controller
         $children = $this->clientRepository->getClientById($childId);
         
         $recipientDetails = [
-            'name' => $parent->full_name,  
-            'mail' => $parent->mail,
+            'name' => $parent->mail != null ? $parent->full_name : $children->full_name,  
+            'mail' => $parent->mail != null ? $parent->mail : $children->mail,
             'children_details' => [
                 'name' => $children->full_name
             ]
