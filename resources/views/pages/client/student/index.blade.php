@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-6">
                 <div class="row g-2">
-                    <div class="col-md-3 col-6">
+                    {{-- <div class="col-md-3 col-6">
                         <a href="{{ url('api/download/excel-template/student') }}"
                             class="btn btn-sm btn-light text-info btn-download w-100"><i class="bi bi-download"></i> <span
                                 class="ms-1">Template</span></a>
@@ -38,9 +38,9 @@
                         <a href="javascript:void(0)" class="btn btn-sm btn-light text-info btn-import w-100"
                             data-bs-toggle="modal" data-bs-target="#importData"><i class="bi bi-cloud-upload"></i> <span
                                 class="ms-1">Import</span></a>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="dropdown">
+                    </div> --}}
+                    <div class="col-md-3 offset-6">
+                        <div class="dropdown"> 
                             <button href="#" class="btn btn-sm btn-light text-dark dropdown-toggle w-100"
                                 data-bs-toggle="dropdown" data-bs-auto-close="false" id="filter">
                                 <i class="bi bi-funnel me-2"></i> Filter
@@ -189,6 +189,9 @@
                         <th class="d-none">Score</th>
                         <th class="bg-info text-white">#</th>
                         <th class="bg-info text-white">Name</th>
+                        @if ($st == 'new-leads')
+                        <th>Followup Status</th>
+                        @endif
                         <th>Interested Program</th>
                         <th>Program Suggest</th>
                         <th>Status Lead</th>
@@ -215,8 +218,9 @@
                         <th>Country of Study Abroad</th>
                         <th>University Destination</th>
                         <th>Interest Major</th>
-                        <th>Joined Date</th>
+                        {{-- <th>Joined Date</th> --}}
                         <th>Scholarship Eligible</th>
+                        <th>Assessment</th>
                         <th>Joined Date</th>
                         <th>Last Update</th>
                         <th>Is Active</th>
@@ -225,7 +229,7 @@
                 </thead>
                 <tfoot class="bg-light text-white">
                     <tr>
-                        <td colspan="21"></td>
+                        <td colspan="{{ $st == "new-leads" ? '23' : '22' }}"></td>
                     </tr>
                 </tfoot>
             </table>
@@ -378,6 +382,23 @@
         </div>
     </div>
 
+
+     {{-- Modal notif export --}}
+    <div class="modal modal-md fade" id="modal-notif-export" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="m-0 p-0" id="title-modal-export">
+                        Export Information
+                    </h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="content-export-information">
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 @push('scripts')
     <script>
@@ -419,18 +440,32 @@
 
             var get_st = "{{ isset($_GET['st']) ? $_GET['st'] : '' }}"
             var button = [
-                'pageLength', {
+                'pageLength', 
+                {
                     extend: 'excel',
                     text: 'Export to Excel',
                 },
+                {
+                    text: 'Export to Spreadsheet',
+                    action: function(e, dt, node, config) {
+                        exportData(get_st);
+                    }
+                }
             ];
 
             // button for DataTable 
             if (get_st == 'new-leads' || get_st == 'potential') {
                 button = [
-                    'pageLength', {
+                    'pageLength', 
+                    {
                         extend: 'excel',
                         text: 'Export to Excel',
+                    },
+                    {
+                        text: 'Export to Spreadsheet',
+                        action: function(e, dt, node, config) {
+                            exportData(get_st);
+                        }
                     },
                     {
                         text: '<i class="bi bi-check-square me-1"></i> Select All',
@@ -450,9 +485,16 @@
             if (get_st == 'new-leads' && ('{{ $isSalesAdmin }}' || '{{ $isSuperAdmin }}') &&
                 '{{ auth()->user()->email }}' != 'ericko.siswanto@all-inedu.com') {
                 button = [
-                    'pageLength', {
+                    'pageLength', 
+                    {
                         extend: 'excel',
                         text: 'Export to Excel',
+                    },
+                    {
+                        text: 'Export to Spreadsheet',
+                        action: function(e, dt, node, config) {
+                            exportData(get_st);
+                        }
                     },
                     {
                         text: '<i class="bi bi-check-square me-1"></i> Select All',
@@ -497,21 +539,15 @@
                     };
 
             var no = 1;
-            var table = $('#clientTable').DataTable({
+
+            var options = {
                 order: [],
-                dom: 'Bfrtip',
                 buttons: [button],
-                lengthMenu: [
-                    [10, 50, 100, -1],
-                    ['10 row', '50 row', '100 row', 'Show all']
-                ],
                 scrollX: true,
                 fixedColumns: {
                     left: (widthView < 768) ? 1 : 2,
                     right: 1
                 },
-                processing: true,
-                serverSide: true,
                 ajax: {
                     url: '',
                     data: function(params) {
@@ -548,6 +584,11 @@
                             return data
                         }
                     },
+                    @if ($st == 'new-leads')
+                    {
+                        data: 'followup_status',
+                    },
+                    @endif
                     {
                         data: 'interest_prog',
                         searchable: false,
@@ -774,11 +815,11 @@
                         className: 'text-center',
                         defaultContent: '-'
                     },
-                    {
-                        data: 'dream_major',
-                        className: 'text-center',
-                        defaultContent: '-'
-                    },
+                    // {
+                    //     data: 'dream_major',
+                    //     className: 'text-center',
+                    //     defaultContent: '-'
+                    // },
                     {
                         data: 'scholarship',
                         className: 'text-center',
@@ -788,6 +829,33 @@
                                 return "Yes"
                             else
                                 return "No"
+                        }
+                    },
+                    {
+                        data: 'took_ia',
+                        className: 'text-center',
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            var link = '{{ env("EDUALL_ASSESSMENT_URL") }}' + 'api/report/' + row.uuid + '?is_preview=1';
+                            if(data !== 'error'){
+                                if(data == 0){
+                                    return '<h5><i class="bi bi-dash-square-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Not yet"></i></h5>'
+                                }else{
+                                    return '<div class="container" style="padding-left:0;">'
+                                            + '<div class="row justify-content-center">'
+                                            + '<div class="col-1">'
+                                            + '<h5 onclick="copyLink(\''+ row.uuid +'\', \'ia-report\')" style="cursor: pointer;"><i class="bi bi-check-square-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Report"></i></h5>' 
+                                            + '</div>'
+                                            + '<div class="col-1">'
+                                            + '<h5 onclick="copyLink(\''+ row.uuid +'\', \'ia-answer\')" style="cursor: pointer;"><i class="bi bi-zoom-in text-success" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Answer"></i></h5>' 
+                                            + '</div>'
+                                            + '</div>'
+                                            + '</div>'
+                                            
+                                }
+                            }else{
+                                return '<h5><i class="bi bi-dash-square-fill text-danger"  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Not yet"></i></h5>'
+                            }
                         }
                     },
                     {
@@ -825,11 +893,13 @@
                         defaultContent: '',
                         render: function(data, type, row, meta) {
                             let content = '<div class="d-flex gap-1 justify-content-center">' +
+                                '<small class="btn btn-sm btn-outline-info cursor-pointer copyLinkAssessment" onclick="copyLink(\''+ row.uuid +'\', \'ia-link\')"><i class="bi bi-card-text"></i></small>' +
                                 '<small class="btn btn-sm btn-outline-warning cursor-pointer editClient" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="More Detail"><i class="bi bi-eye"></i></small>'
                             '</div>';
 
                             if (get_st == 'new-leads' || get_st == 'potential') {
                                 content = '<div class="d-flex gap-1 justify-content-center">' +
+                                    '<small class="btn btn-sm btn-outline-info cursor-pointer copyLinkAssessment" onclick="copyLink(\''+ row.uuid +'\', \'ia-link\')" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Copy initial assessment link"><i class="bi bi-card-text"></i></small>'+
                                     '<small data-bs-toggle="tooltip" data-bs-placement="top" ' +
                                     'data-bs-custom-class="custom-tooltip" ' +
                                     'data-bs-title="Delete" class="btn btn-sm btn-outline-danger cursor-pointer deleteClient">' +
@@ -847,8 +917,10 @@
                     if (moment(data['created_at']).format('YYYY-MM-DD') == currentDate) {
                         $('td', row).addClass('table-success');
                     }
-                }
-            });
+                },
+            }
+
+            var table = initializeDataTable('#clientTable', options, 'rt_client');
 
             @php
                 $privilage = $menus['Client']->where('submenu_name', 'Students')->first();
@@ -983,13 +1055,13 @@
                 $('input.editor-active').each(function() {
                     if (uncheck_number == check_number) {
                         $(this).prop('checked', true)
-                        table.button(2).text('<i class="bi bi-x me-1"></i> Unselect All')
+                        table.button(3).text('<i class="bi bi-x me-1"></i> Unselect All')
                     } else if (checked_number == check_number) {
                         $(this).prop('checked', false)
-                        table.button(2).text('<i class="bi bi-check-square me-1"></i> Select All')
+                        table.button(3).text('<i class="bi bi-check-square me-1"></i> Select All')
                     } else {
                         $(this).prop('checked', true)
-                        table.button(2).text('<i class="bi bi-x me-1"></i> Unselect All')
+                        table.button(3).text('<i class="bi bi-x me-1"></i> Unselect All')
                     }
                 });
             }
@@ -1002,7 +1074,6 @@
                     }
                 });
 
-                console.log(selected);
 
                 if (selected.length > 0) {
                     Swal.fire({
@@ -1101,6 +1172,8 @@
                         $('#assignForm').modal('hide');
                     })
             });
+
+           
         });
 
         function closeUpdateLead() {
@@ -1157,5 +1230,151 @@
                     notification('error', error)
                 })
         }
+
+        function copyLink(uuid, type) {
+            var copyText = "";
+            var msg = "";
+            switch (type) {
+                case 'ia-link':
+                    // Get the text field
+                    copyText = "{{ env('EDUALL_ASSESSMENT_URL') }}login/" + uuid;
+                    msg = "Assessment successfully copied ";
+                    
+                    break;
+
+                case 'ia-report':
+                    // Get the text field
+                    copyText = "{{ env('EDUALL_ASSESSMENT_URL') }}api/report/" + uuid + "?is_preview=1";
+                    msg = "Assessment report successfully copied ";
+                    
+                    break;
+
+                case 'ia-answer':
+                    // Get the text field
+                    copyText = "{{ env('EDUALL_ASSESSMENT_URL') }}api/report/" + uuid + "/summary?is_preview=1";
+                    msg = "Answer assessment successfully copied ";
+                    
+                    break;
+            }
+
+            // Copy the text inside the text field
+            navigator.clipboard.writeText(copyText);
+
+            // Alert the copied text
+            // alert("Copied the text: " + copyText.value);
+            Swal.fire({
+                icon: 'success',
+                text: msg,
+                timer: 1500,
+                width:300,
+                showConfirmButton: false,
+            });
+            //    swal("Copied the text: " + copyText.value);
+        }
+
+        function exportData(type)
+        {
+            showLoading()
+            type = type === '' ? 'all' : type;
+            axios
+                .get("{{ url('api/export') }}/" + type + '/model', {
+                    headers:{
+                        'Authorization': 'Bearer ' + '{{ Session::get("access_token") }}'
+                    }
+                }).then(function (response) {
+                    
+                    var data = response.data;
+                    var batch_id = data.batch_id;
+
+                    html = '';
+                    html += `<div id="loading-bar">`;
+                    html += `<div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="height:25px;">`;
+                    html += `<div class="progress-bar progress-bar-striped progress-bar-animated" id="bar" style="width: 0%">0%</div>`;
+                    html += `</div>`;
+                    html += `<p class="text-center mt-2" id="total">Exporting ...</p>`;
+                    html += `</div>`;
+
+                                    
+                    $("#modal-notif-export").modal('show');
+                    $('#content-export-information').html(html);
+
+                    var i = 0;
+
+                    let myInterval = setInterval(() => {
+                        axios
+                        .get("{{ url('api/batch') }}/" + batch_id, {
+                            headers:{
+                                'Authorization': 'Bearer ' + '{{ Session::get("access_token") }}'
+                            }
+                        }).then(function(response){
+
+                            $('#bar').css({'width': response.data.progress + '%'});
+                            $('#bar').text(response.data.progress + '%');
+                            $('#total').html(`Exporting ${response.data.total_imported}/${response.data.total_data}`);
+                                        
+                            i++;
+
+                            if(response.data.progress == 100){
+
+                                $("#modal-notif-export").modal('hide');
+                                var urlSpreadsheet  = 'https://docs.google.com/spreadsheets/d/1aPIULau0i3p1UoJVVsX8SnxIXVcIW6I42s9AwgofV-U/edit'
+                                var tab_id = '';
+                                switch (type) {
+                                    case 'new-leads':
+                                        tab_id = 0;
+                                        break;
+                                    case 'potential':
+                                        tab_id = '110833908';
+                                        break;
+                                    case 'mentee':
+                                        tab_id = '1367815258';
+                                        break;
+                                    case 'non-mentee':
+                                        tab_id = '1480246071';
+                                        break;
+                                    case 'all':
+                                        tab_id = '819681920';
+                                        break;
+                                    case 'inactive':
+                                        tab_id = '1330533397';
+                                        break;
+                                    default:
+                                        notification('error', 'Invalid client category!');
+                                        break;
+                                }
+                                window.open(urlSpreadsheet + '?gid=' + tab_id + '#gid=' + tab_id, '_blank');
+                                clearInterval(myInterval);
+                            }
+
+                            if(i >= 100){
+                                $("#modal-notif-export").modal('hide');
+                                clearInterval(myInterval);
+                                var msg = 'Timeout!';
+                                notification('error', msg);
+                            }
+                        }).catch(function(error, response) {
+                            clearInterval(myInterval);
+                            $("#modal-notif-export").modal('hide');
+                            var msg = 'Something went wrong. Please try again';
+                            notification('error', msg);
+
+                        });
+                    }, 3000);
+                    
+                    swal.close()
+                }).catch(function(error, response) {
+                    var msg = error.response.data.error;
+                    if(error.response.status == 429){
+                        msg = 'Please wait 1 minute!'
+                    }
+                    swal.close()
+                    notification('error', msg);
+
+            })
+            
+        }
+
+    
+
     </script>
 @endpush

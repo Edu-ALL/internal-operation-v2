@@ -4,12 +4,18 @@
 
 @section('content')
     <div class="card bg-secondary mb-1 p-2">
-        <div class="row align-items-center justify-content-between">
-            <div class="col-md-6">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
                 <h5 class="text-white m-0">
                     <i class="bi bi-tag me-1"></i>
-                    Receipt of Client Program
+                        Receipt of Client Program
                 </h5>
+            </div>
+            <div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="bundleChecked" @checked(Request::get('b') == true)>
+                    <label class="form-check-label text-white me-1" for="bundleChecked">Bundle</label>
+                  </div>
             </div>
         </div>
     </div>
@@ -69,6 +75,25 @@
                 'pageLength', {
                     extend: 'excel',
                     text: 'Export to Excel',
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node){
+                                var clearHtml = '';
+                                var result = '';
+                                if(column === 2){
+                                    clearHtml = data.replace(/<[^>]*>?/gm, '');
+                                    if (clearHtml.indexOf('{}') === -1) {
+                                        result = clearHtml.replace(/{.*}/, '');
+                                    }
+                                }else if(column === 8){
+                                    result = data.replace(/<[^>]*>?/gm, '');
+                                }else{
+                                    result = data;
+                                }
+                                return result;
+                            }
+                        }
+                    },
                 }
             ],
             order: [[6, 'desc']],
@@ -76,6 +101,9 @@
             fixedColumns: {
                 left: (widthView < 768) ? 1 : 2,
                 right: 1
+            },
+            search: {
+                return: true
             },
             processing: true,
             serverSide: true,
@@ -92,7 +120,15 @@
                 },
                 {
                     data: 'program_name',
-                    name: 'program.program_name'
+                    name: 'program.program_name',
+                    render: function(data, type, row, meta) {
+                                    if(row.bundling_id !== null){
+                                        bundling_id = row.bundling_id.substring(0, 3).toUpperCase();
+                                    }
+
+                                    return row.is_bundle > 0 ? data + ' <span class="badge text-bg-success" style="font-size:8px";>{Bundle '+ bundling_id +'}</span>' : data;
+                                }
+
                 },
                 {
                     data: 'receipt_id',
@@ -146,6 +182,23 @@
             table.button(1).disable();
         @endif
 
+    });
+
+    $('#bundleChecked').click(function() {
+        var url = '{{ Request::url() }}';
+
+        var searchParams = new URLSearchParams(window.location.search);
+        
+        if($('#bundleChecked').is(':checked')){
+            searchParams.set('b','true')
+            var newParams = searchParams.toString()
+        }else{
+            searchParams.delete('b')
+            var newParams = searchParams.toString()
+            
+        }
+
+        window.location.href = url + '?' + newParams;
     });
 </script>
 @endpush

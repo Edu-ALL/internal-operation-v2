@@ -24,6 +24,7 @@
                 $(document).ready(function() {
                     var table = $('#programTable').DataTable({
                         dom: 'Bfrtip',
+                        order: [[3, 'desc']],
                         lengthMenu: [
                             [10, 25, 50, 100, -1],
                             ['10 rows', '25 rows', '50 rows', '100 rows', 'Show all']
@@ -32,12 +33,34 @@
                             'pageLength', {
                                 extend: 'excel',
                                 text: 'Export to Excel',
+                                exportOptions: {
+                                    format: {
+                                        body: function (data, row, column, node){
+                                            var clearHtml = '';
+                                            var result = '';
+                                            if(column === 2){
+                                                clearHtml = data.replace(/<[^>]*>?/gm, '');
+                                                if (clearHtml.indexOf('{}') === -1) {
+                                                    result = clearHtml.replace(/{.*}/, '');
+                                                }
+                                            }else if(column === 6){
+                                                result = data.replace(/<[^>]*>?/gm, '');
+                                            }else{
+                                                result = data;
+                                            }
+                                            return result;
+                                        }
+                                    }
+                                },
                             }
                         ],
                         scrollX: true,
                         fixedColumns: {
                             left: (widthView < 768) ? 1 : 2,
                             right: 1
+                        },
+                        search: {
+                            return: true
                         },
                         processing: true,
                         serverSide: true,
@@ -54,6 +77,17 @@
                             },
                             {
                                 data: 'program_name',
+                                render: function(data, type, row, meta) {
+                                    var bundling_id = invoice_alert = null;
+                                    if(row.bundling_id !== null){
+                                        bundling_id = row.bundling_id.substring(0, 3).toUpperCase();
+                                    }
+
+                                    if(row.count_invoice > 0){
+                                        invoice_alert = 'animated-gradient';
+                                    }
+                                    return row.is_bundle > 0 ? data + ' <span class="badge text-bg-success '+ invoice_alert +'" style="font-size:8px";>{Bundle '+ bundling_id +'}</span>' : data;
+                                }
                             },
                             {
                                 data: 'success_date',

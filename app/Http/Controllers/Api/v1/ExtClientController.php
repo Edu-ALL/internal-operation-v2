@@ -15,19 +15,24 @@ use App\Interfaces\ClientEventRepositoryInterface;
 use App\Interfaces\ClientRepositoryInterface;
 use App\Interfaces\EventRepositoryInterface;
 use App\Interfaces\SchoolRepositoryInterface;
+use App\Jobs\Client\ProcessDefineCategory;
 use App\Jobs\RawClient\ProcessVerifyClient;
 use App\Jobs\RawClient\ProcessVerifyClientParent;
 use App\Models\ClientEvent;
 use App\Models\Event;
 use App\Models\School;
 use App\Models\UserClient;
+use App\Repositories\ProgramRepository;
 use App\Rules\Event\DestinationCountryRequiredRule;
 use App\Rules\Event\DestinationCountryRule;
 use App\Rules\Event\DestinationCountryValidityRule;
 use Exception;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
@@ -49,14 +54,16 @@ class ExtClientController extends Controller
     private ClientEventRepositoryInterface $clientEventRepository;
     private EventRepositoryInterface $eventRepository;
     private ClientEventLogMailRepositoryInterface $clientEventLogMailRepository;
+    private ProgramRepository $programRepository;
 
-    public function __construct(ClientRepositoryInterface $clientRepository, SchoolRepositoryInterface $schoolRepository, ClientEventRepositoryInterface $clientEventRepository, EventRepositoryInterface $eventRepository, ClientEventLogMailRepositoryInterface $clientEventLogMailRepository)
+    public function __construct(ClientRepositoryInterface $clientRepository, SchoolRepositoryInterface $schoolRepository, ClientEventRepositoryInterface $clientEventRepository, EventRepositoryInterface $eventRepository, ClientEventLogMailRepositoryInterface $clientEventLogMailRepository, ProgramRepository $programRepository)
     {
         $this->clientRepository = $clientRepository;
         $this->schoolRepository = $schoolRepository;
         $this->clientEventRepository = $clientEventRepository;
         $this->eventRepository = $eventRepository;
         $this->clientEventLogMailRepository = $clientEventLogMailRepository;
+        $this->programRepository = $programRepository;
     }
 
     public function getParentMentee()
@@ -753,6 +760,209 @@ class ExtClientController extends Controller
 
     }
 
+    public function storePublicRegistration(Request $request)
+    {
+
+        # validation
+        $rules = [
+            'role' => 'required|in:parent,student',
+            'fullname' => 'required',
+            'mail' => 'required|email',
+            'phone' => 'required',
+            'school_id' => [
+                'nullable',
+                $request->school_id != 'new' ? 'exists:tbl_sch,sch_id' : null
+            ],
+            'other_school' => 'nullable',
+            'secondary_name' => 'required_if:role,parent',
+            'secondary_mail' => 'nullable',
+            'secondary_phone' => 'nullable',
+            'graduation_year' => 'required',
+            'destination_country' => 'required|array',
+            'destination_country.*' => 'exists:tbl_tag,id',
+            'interest_prog' => 'required|exists:tbl_prog,prog_id'
+        ];
+
+        $incomingRequest = $request->only([
+            'role', 'fullname', 'mail', 'phone', 'school_id', 'other_school', 'graduation_year', 'destination_country', 'interest_prog', 'secondary_name', 'secondary_mail', 'secondary_phone'
+        ]);
+
+        $messages = [
+            'secondary_name.required_if' => 'The child name field is required.',
+            'school_id.required_if' => 'The school field is required.',
+            'school_id.exists' => 'The school field is not valid.',
+            'destination_country.*.exists' => 'The destination country must be one of the following values.'
+        ];
+
+        
+        $validator = Validator::make($incomingRequest, $rules, $messages);
+        
+
+        # threw error if validation fails
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'error' => $validator->errors()
+            ]);
+        }
+
+
+        # after validating incoming request data, then retrieve the incoming request data
+        $validated = $request->collect();
+        $validated['scholarship'] = 'N';
+
+        # declaration of default variables that will be used 
+        $client = null;
+
+        DB::beginTransaction();
+        try {
+            
+            $validatedArray = $validated->toArray();
+
+            # separate the incoming request data
+            switch ($validated['role']) {
+                case 'student':
+                    $client = $this->storeStudent($validated);
+                    $clientId = $client->id;
+
+                    break;
+
+                case 'parent':
+                    $parent = $client = $this->storeParent($validated);
+                    $clientId = $client->id;
+                    if(isset($validated['secondary_name'])){
+                        $validatedStudent = $request->except(['fullname', 'email', 'phone']);
+                        $validatedStudent['fullname'] = $validated['secondary_name'];
+                        $validatedStudent['mail'] = $validated['secondary_mail'] != null ? $validated['secondary_mail'] : null;
+                        $validatedStudent['phone'] = $validated['secondary_phone'] != null ? $validated['secondary_phone'] : null;
+                        $validatedStudent['scholarship'] = 'N';
+
+                        $student = $this->storeStudent($validatedStudent);
+
+                        $studentId = $student->id;
+
+                        # prevent client_id and child_id on client event has the same value
+                        if ($parent->id == $studentId) {
+
+                            throw new Exception('Client ID and Child ID has the same value');
+                        }
+
+                        # catch if studentId is not from a valid student but from client with role parent
+                        if ($student->roles()->where('role_name', 'Parent')->exists()) {
+
+                            throw new Exception('We cannot continue the process because the studentId was filled with Client that has parent role.');
+                        }
+
+                        $this->storeRelationship($parent, $student);
+                        
+                        if($studentId != null && isset($validated['destination_country'])){
+                            $this->attachDestinationCountry($studentId, $validatedArray['destination_country']);
+                        }
+
+                        if($studentId != null && isset($validated['interest_prog'])){            
+                            if(isset($validatedArray['interest_prog'])){
+                                $this->reAttachInterestPrograms($studentId, $validatedArray['interest_prog']);
+                            }
+                        }
+
+                    }else{
+                        if(isset($schoolId)){
+                            $this->clientRepository->updateClient($parent->id, ['sch_id' => $schoolId]);
+                        }
+
+                    }
+                    break;
+            }
+
+            if($client != null && isset($validated['destination_country'])){
+                $this->attachDestinationCountry($clientId, $validatedArray['destination_country']);
+            }
+
+            if($client != null && isset($validated['interest_prog'])){
+                // if(count($validatedArray['interest_prog']) > 0){
+                //     foreach ($validatedArray['interest_prog'] as $interestProg) {
+                //         $this->reAttachInterestPrograms($clientId, $interestProg);
+                //     }
+                // }
+
+                if(isset($validatedArray['interest_prog'])){
+                    $this->reAttachInterestPrograms($clientId, $validatedArray['interest_prog']);
+                }
+            }
+
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Registration from EduAll website failed: '. $e->getMessage() . ' | On Line: ' .$e->getLine());
+            
+            return response()->json([
+                'success' => false,
+                'message' => "We encountered an issue completing your registration. Please check for any missing information or errors and try again. If you're still having trouble, feel free to contact our support team for assistance."
+            ]);
+        }
+
+        $prog = $this->programRepository->getProgramById($request->interest_prog);
+        $passedData = [
+            'client' => [
+                'name' => $client->full_name,
+            ],
+            'program' => [
+                'name' => $prog->program_name
+            ]
+        ];
+
+        if($request->role == 'student'){
+            $template = 'mail-template.registration.public.thanks-email-student';
+        }else{
+            $passedData['client']['child_name'] = $request->secondary_name;
+            $template = 'mail-template.registration.public.thanks-email-parent';
+        }
+
+        $dataResponseClient = [
+            'role' => $validated['role'],
+            'first_name' => $client->first_name,
+            'last_name' => $client->last_name,
+            'mail' => $client->mail,
+            'phone' => $client->phone,
+            'inteset_prog' => $client->interestPrograms,
+            'school_id' => $client->sch_id,
+            'school_name' => isset($client->school) ? $client->school->sch_name : null,
+            'graduation_year' => $client->graduation_year
+        ];
+
+        try {
+
+            $subject = "Your registration is confirmed";
+
+            Mail::send($template, $passedData,
+                    function ($message) use ($client, $subject) {
+                        $message->to($client->mail, $client->full_name)
+                            ->subject($subject);
+                    }
+            );
+            $sent_mail = 1;
+
+        } catch (Exception $e) {
+
+            $sent_mail = 0;
+            throw new Exception($e->getMessage());
+            Log::error('Failed send email to public registration | error : ' . $e->getMessage() . ' on file '.$e->getFile().' | Line ' . $e->getLine());
+
+        }
+
+
+        # create log success
+        $this->logSuccess('store', 'Form Embed', 'Public Registration', 'Guest', $dataResponseClient, null);
+
+        return response()->json([
+            'success' => true,
+            'data' => $dataResponseClient,
+            'message' => "Welcome aboard! Your registration is complete."
+        ]);
+
+    }
+
     public function getRole(ClientEvent $clientevent)
     {
         # initiate variables
@@ -788,7 +998,7 @@ class ExtClientController extends Controller
         ];
     }
 
-    private function generateTicketID()
+    public function generateTicketID()
     {
         do {
             
@@ -900,6 +1110,9 @@ class ExtClientController extends Controller
 
         # trigger to verify student / children
         ProcessVerifyClient::dispatch([$clientId])->onQueue('verifying_client');
+
+        # trigger define category client
+        ProcessDefineCategory::dispatch([$clientId])->onQueue('define-category-client');
 
         return $client;
     
@@ -1242,7 +1455,8 @@ class ExtClientController extends Controller
         $schoolId = $incomingRequest['school_id'];
 
 
-        if ($incomingRequest['school_id'] == "new") {
+        # SCH-0301 == other 
+        if ($incomingRequest['school_id'] == "new" || $incomingRequest['school_id'] == "SCH-0301") {
             # store a new school or get the existing one
 
             if (!$schoolExistOnDB = $this->schoolRepository->getSchoolByName($incomingRequest['other_school'])) {
@@ -1630,5 +1844,179 @@ class ExtClientController extends Controller
             'success' => true,
             'data' => $student
         ]);
+    }
+
+    public function getUserByUUID($uuid)
+    {
+        # get student info
+        $student = $this->clientRepository->getClientByUUIDforAssessment($uuid);
+        
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => "I apologize, but it appears you don't currently have access to the initial assessment app."
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $student
+        ]);
+    }
+
+    //! Timesheet needs
+    public function checkUserEmail(Request $request): JsonResponse
+    {   
+        $incomingEmail = $request->get('email');
+        
+        $query = \App\Models\User::with('roles')->whereHas('roles', function ($query) use ($incomingEmail) {
+            $query->whereIn('role_name', ['Mentor', 'Tutor']);
+        })->where('email', $incomingEmail);
+
+        $result = $query->exists() ? $query->select(['id', 'uuid', 'first_name', 'last_name', 'email', 'password'])->first() : null;
+
+        return response()->json($result);
+    }
+
+    public function validateCredentials(Request $request): JsonResponse
+    {
+        $incomingEmail = $request->post('email');
+        $incomingPassword = $request->post('password');
+
+        $user = \App\Models\User::with('roles')->where('email', $incomingEmail)->first();
+
+        if (!$user || !Hash::check($incomingPassword, $user->password)) {
+
+            throw new HttpResponseException(
+                response()->json([
+                    'errors' => 'The provided credentials are incorrect.'
+                ], JsonResponse::HTTP_BAD_REQUEST)
+            );
+        }
+
+        return response()->json($user);
+    }
+
+    public function getMentorTutors(Request $request): JsonResponse 
+    {
+        /* Incoming request */
+        $keyword = $request->get('keyword');
+
+        $user = \App\Models\User::query()->
+            select('id', 'uuid', 'first_name', 'last_name', 'email', 'phone')->
+            with(['roles' => function ($query) {
+                $query->select('role_name', 'tutor_subject', 'feehours');
+            }])->
+            whereHas('roles', function ($query) {
+                $query->whereIn('role_name', ['Mentor', 'Tutor']);
+            })->
+            when($keyword, function ($query) use ($keyword) {
+                $query->
+                    whereRaw('CONCAT(first_name, " ", last_name) like ?', ['%'.$keyword.'%'])->
+                    orWhereRaw('email like ?', ['%'.$keyword.'%'])->
+                    orWhereRaw('phone like ?', ['%'.$keyword.'%']);
+            })->
+            get();
+        
+        $mappedUser = $user->map(function ($data) {
+            $base = [
+                'uuid' => $data['uuid'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
+                'phone' => $data['phone']
+            ];
+
+            foreach ($data['roles'] as $role) {
+
+                if (!in_array($role['role_name'], ['Mentor', 'Tutor']))
+                    continue;
+
+
+                $acceptedRole = [
+                    'role' => $role['role_name'],
+                    'tutor_subject' => $role['tutor_subject'],
+                    'feehours' => $role['feehours'],
+                ];
+            
+            }
+
+            return array_merge($base, $acceptedRole);
+        });
+
+        $mappedUser = $mappedUser->paginate(10);
+
+        return response()->json($mappedUser);
+    }
+
+    public function updateUser (Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required'
+        ]);
+
+        $validated = $request->only(['email', 'password']);
+
+        DB::beginTransaction();
+        try {
+            $user = \App\Models\User::where('email', $validated['email'])->first();
+            $user->password = Hash::make($validated['password']);
+            $user->save();
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        Log::info($user->first_name . ' ' . $user->last_name . ' has perform a password change.');
+
+        return response()->json([
+            'message' => 'Information has been updated.'
+        ]);
+
+    }
+
+    public function updateTookIA(Request $request){
+        $uuid = $request->uuid;
+
+        $rules = [
+            'uuid' => 'required|exists:tbl_client,uuid'
+        ];
+
+        $validator = Validator::make(['uuid' => $uuid], $rules);
+        
+        # threw error if validation fails
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'error' => $validator->errors()
+            ]);
+        }
+
+        DB::beginTransaction();
+        try {
+            
+            $client =  $this->clientRepository->updateClientByUUID($uuid, ['took_ia' => 1]);
+
+            $response = [
+                'success' => true,
+                'message' => 'Successfully update took ia'
+            ];
+
+            Log::notice('Successfully update took ia ' . $client->full_name);
+            DB::commit();
+        }catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update took ia '. $e->getMessage() . ' | On Line: ' .$e->getLine());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to update took ia' . $e->getMessage()
+            ], 500);
+        }
+
+        return response()->json($response);
     }
 }

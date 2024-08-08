@@ -1,5 +1,7 @@
 <?php
 
+use App\Events\SendMessageEvent;
+use App\Events\UpdateDatatableEvent;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SchoolDetailController;
@@ -9,11 +11,15 @@ use App\Http\Controllers\ClientEventController;
 use App\Http\Controllers\ClientProgramController;
 use App\Http\Controllers\ClientStudentController;
 use App\Http\Controllers\GoogleSheetController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VolunteerController;
+use App\Jobs\Client\ProcessDefineCategory;
 use App\Jobs\testQueue;
+use Google\Service\CloudSearch\MessageContent;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -30,13 +36,15 @@ use Illuminate\Support\Facades\Session;
 */
 
 # AUTH START --------------------------------
+Route::get('/message', function(){
+    event(New UpdateDatatableEvent(
+        tableName: 'rt_client'
+    ));
+});
 
 Route::get('/', function () {
     return view('auth.login');
 })->middleware('guest');
-
-// Route::get('google-sheet', [GoogleSheetController::class, 'store']);
-
 
 Route::get('404', function () {
     return view('auth.404');
@@ -56,22 +64,26 @@ Route::group(['middleware' => ['auth', 'auth.department']], function () {
     Route::get('dashboard2', function (Request $request) {
 
         $endpoint = "https://api.quotable.io/quotes/random";
+        $alternate_endpoint = "https://dummyjson.com/quotes";
 
         # create 
-        $response = Http::get($endpoint);
-        
+        $response = Http::get($alternate_endpoint);
+
         $data = null;
 
         # check status
         if ($response->successful()) {
-            if(count(json_decode($response))> 0)
+            if(count($response['quotes'])> 0)
             {
-                $decode = json_decode($response);
-                $data = $decode[0];
+                $decode = $response['quotes'];
+                $data['content'] = $decode[0]['quote'];
+                $data['author'] = $decode[0]['author'];
             }
         }
+
+        $data = compact('data');
     
-        return view('pages.dashboard.blank-page')->with('data', $data);
+        return view('pages.dashboard.blank-page')->with(json_encode($data));
     });
 
     Route::get('import', function () {
@@ -80,7 +92,6 @@ Route::group(['middleware' => ['auth', 'auth.department']], function () {
 });
 
 # AUTH END ------------------------------------
-
 
 
 # FORM EVENT EMBED START ------------------------

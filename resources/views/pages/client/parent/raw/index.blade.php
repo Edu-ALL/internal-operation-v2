@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-4">
                 <div class="row g-1">
-                    <div class="col-md-4 col-8">
+                    {{-- <div class="col-md-4 col-8">
                         <a href="{{ url('api/download/excel-template/parent') }}"
                             class="btn btn-sm btn-light text-info btn-download w-100"><i class="bi bi-download"></i> <span
                                 class="ms-1">Template</span></a>
@@ -38,8 +38,8 @@
                         <a href="javascript:void(0)" class="btn btn-sm btn-light text-info btn-import w-100"
                             data-bs-toggle="modal" data-bs-target="#importData"><i class="bi bi-cloud-upload"></i> <span
                                 class="ms-1">Import</span></a>
-                    </div>
-                    <div class="col-md-4">
+                    </div> --}}
+                    <div class="col-md-4 offset-8">
                         <a href="{{ url('client/parent/create') }}" class="btn btn-sm btn-info w-100"><i
                                 class="bi bi-plus-square me-1"></i> Add
                             Parent</a>
@@ -190,12 +190,11 @@
                 return (similar);
             }
 
-            var table = $('#rawTable').DataTable({
+            var options = {
                 order: [
                     // [20, 'desc'],
                     [13, 'desc']
                 ],
-                dom: 'Bfrtip',
                 buttons: [
                     'pageLength', {
                         extend: 'excel',
@@ -214,17 +213,10 @@
                         }
                     },
                 ],
-                lengthMenu: [
-                    [10, 50, 100, -1],
-                    ['10 Leads', '50 Leads', '100 Leads', 'Show all']
-                ],
-                scrollX: true,
                 fixedColumns: {
                     left: (widthView < 768) ? 1 : 2,
                     right: 1
                 },
-                processing: true,
-                serverSide: true,
                 ajax: {
                     url: '',
                 },
@@ -365,7 +357,9 @@
                         $('td', row).addClass('table-success');
                     }
                 }
-            });
+            };
+
+            var table = initializeDataTable('#rawTable', options, 'rt_client');
 
             // Add a click event listener to each row in the parent DataTable
             table.on('click', 'td.dt-control', function(e) {

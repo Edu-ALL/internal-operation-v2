@@ -27,7 +27,7 @@
             </div>
             <div class="col-md-4">
                 <div class="row g-1">
-                    <div class="col-md-4 col-7">
+                    {{-- <div class="col-md-4 col-7">
                         <a href="{{ url('api/download/excel-template/teacher') }}"
                             class="btn btn-sm btn-light text-info btn-download w-100"><i class="bi bi-download"></i> <span
                                 class="ms-1">Template</span></a>
@@ -36,8 +36,8 @@
                         <a href="javascript:void(0)" class="btn btn-sm btn-light text-info btn-import w-100"
                             data-bs-toggle="modal" data-bs-target="#importData"><i class="bi bi-cloud-upload"></i> <span
                                 class="ms-1">Import</span></a>
-                    </div>
-                    <div class="col-md-4">
+                    </div> --}}
+                    <div class="col-md-4 offset-8">
                         <a href="{{ url('client/teacher-counselor/create') }}" class="btn btn-sm btn-info w-100"><i
                                 class="bi bi-plus-square me-1"></i> Add
                             Teacher</a>
@@ -123,25 +123,18 @@
     <script>
         var widthView = $(window).width();
         $(document).ready(function() {
-            var table = $('#clientTable').DataTable({
-                dom: 'Bfrtip',
-                lengthMenu: [
-                    [10, 50, 100, -1],
-                    ['10 teachers', '50 teachers', '100 teachers', 'Show all']
-                ],
+
+            var options = {
                 buttons: [
                     'pageLength', {
                         extend: 'excel',
                         text: 'Export to Excel',
                     }
                 ],
-                scrollX: true,
                 fixedColumns: {
                     left: (widthView < 768) ? 1 : 2,
                     right: 1
                 },
-                processing: true,
-                serverSide: true,
                 ajax: '',
                 columns: [{
                         data: 'id',
@@ -196,7 +189,9 @@
                         $('td', row).addClass('table-success');
                     }
                 }
-            });
+            };
+
+            var table = initializeDataTable('#clientTable', options, 'rt_client');
 
             @php
                 $privilage = $menus['Client']->where('submenu_name', 'Teacher/Counselor')->first();

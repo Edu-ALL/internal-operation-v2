@@ -53,7 +53,7 @@
                 </div>
                 <div>
                     <a class="navbar-brand brand-logo" href="{{ url('dashboard') }}">
-                        <img src="{{ asset('img/logo.png') }}" alt="logo" class="h-auto" />
+                        <img src="{{ asset('img/new-logo.png') }}" alt="logo" class="h-auto" />
                     </a>
                     <a class="navbar-brand brand-logo-mini" href="{{ url('dashboard') }}">
                         <img src="{{ asset('library/dashboard/images/logo-mini.svg') }}" alt="logo" />
@@ -67,6 +67,15 @@
                                 class="text-black fw-bold">{{ Auth::user()->first_name }}
                                 {{ Auth::user()->last_name }}</span></h1>
                     </li>
+                    @env('local')
+                        @if(env('DB_HOST') != '127.0.0.1')
+                            <li class="nav-item font-weight-semibold d-none d-lg-block ms-2">
+                                <div class="alert alert-danger" role="alert">
+                                    You're currently using a production database!
+                                </div>
+                            </li>
+                        @endif
+                    @endenv
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown d-none d-lg-block user-dropdown me-lg-3 me-0" id="loading-import">
@@ -261,88 +270,7 @@
         <!-- partial -->
         <div class="container-fluid page-body-wrapper">
             <!-- partial:partials/_sidebar.html -->
-            <nav class="sidebar sidebar-offcanvas position-md-fixed h-75 overflow-auto pt-3 pe-1" id="sidebar">
-                <ul class="nav">
-                    <li class="nav-item">
-                        <a @class([
-                            'nav-link',
-                            'bg-secondary text-white' => Request::is('dashboard'),
-                        ]) href="{{ url('dashboard') }}">
-                            <i class="bi bi-speedometer2 mx-2"></i>
-                            <span class="menu-title">Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item nav-category">Pages</li>
-
-                    @foreach ($menus as $key => $menu)
-                        <li class="nav-item">
-                            @php
-                                $key = $key == 'Users' ? 'User' : $key;
-                            @endphp
-                            <a class="nav-link  {{ Request::is(strtolower($key) . '*') ? 'text-primary' : '' }}"
-                                data-bs-toggle="collapse" href="#{{ strtolower($key) }}" aria-expanded="false"
-                                aria-controls="{{ strtolower($key) }}">
-                                <i class="{{ $menu[0]['icon'] }} mx-2"></i>
-                                <span class="menu-title">{{ $key }}</span>
-                                <i class="menu-arrow bi bi-arrow-right"></i>
-                            </a>
-                            <div @class(['collapse', 'show' => Request::is(strtolower($key) . '*')]) id="{{ strtolower($key) }}">
-                                <ul class="nav flex-column sub-menu bg-secondary p-0" style="list-style-type: none;">
-                                    @foreach ($menu as $key2 => $submenu)
-                                        @php
-                                            $submenu_link = $submenu['submenu_link'];
-                                            $explode = explode('/', $submenu_link);
-                                            $length = count($explode);
-                                            // if ($length > 2) {
-                                            //     $submenu_link_array = array_slice($explode, 0, 2);
-                                            //     $submenu_link = implode('/', $submenu_link_array);
-                                            // }
-                                        @endphp
-                                        @if ($position = strpos($submenu['submenu_link'], '?'))
-                                            @php
-                                                $submenu_link = substr($submenu['submenu_link'], 0, $position);
-                                            @endphp
-                                        @endif
-                                        <li class="p-0">
-                                            <a @class([
-                                                'nav-link',
-                                                'py-1',
-                                                'm-0',
-                                                'ps-5',
-                                                'border-bottom',
-                                                'rounded-0',
-                                                'active bg-info' => Request::is($submenu_link . '*'),
-                                                'text-white',
-                                            ]) href="{{ url($submenu['submenu_link']) }}">
-                                                <i class="bi bi-dash me-2"></i>
-                                                {{ $submenu['submenu_name'] }}
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </li>
-                    @endforeach
-
-                    @if ($isSuperAdmin)
-                        <li class="nav-item">
-                            <a href="{{ url('request-sign?type=invoice') }}"
-                                class="nav-link {{ Request::is('request-sign') ? 'bg-secondary text-white' : '' }}">
-                                <i class="bi bi-pencil mx-2"></i>
-                                <span class="menu-title">Request Sign</span>
-                            </a>
-                        </li>
-                        <li class="nav-item nav-category">Settings</li>
-                        <li class="nav-item">
-                            <a href="{{ url('menus') }}"
-                                class="nav-link {{ Request::is('menus') ? 'bg-secondary text-white' : '' }}">
-                                <i class="bi bi-list mx-2"></i>
-                                <span class="menu-title">Menus</span>
-                            </a>
-                        </li>
-                    @endif
-                </ul>
-            </nav>
+            <x-apps.sidebar />
             <!-- partial -->
             <div class="main-panel position-md-absolute end-0 px-0">
                 <div class="content-wrapper">
@@ -403,8 +331,8 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($birthDay as $mentee)
-                                        <tr class="text-center">
-                                            <td>{{ $loop->iteration }}</td>
+                                        <tr class="text-left">
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td>{{ $mentee->full_name }}</td>
                                             <td>{{ date('D, d M Y', strtotime($mentee->dob)) }}</td>
                                             <td>{{ strip_tags($mentee->address) }}</td>

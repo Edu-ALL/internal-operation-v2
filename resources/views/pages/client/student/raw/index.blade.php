@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-6">
                 <div class="row g-2">
-                    <div class="col-md-3 col-6">
+                    {{-- <div class="col-md-3 col-6">
                         <a href="{{ url('api/download/excel-template/student') }}"
                             class="btn btn-sm btn-light text-info btn-download w-100"><i class="bi bi-download"></i> <span
                                 class="ms-1">Template</span></a>
@@ -38,8 +38,8 @@
                         <a href="javascript:void(0)" class="btn btn-sm btn-light text-info btn-import w-100"
                             data-bs-toggle="modal" data-bs-target="#importData"><i class="bi bi-cloud-upload"></i> <span
                                 class="ms-1">Import</span></a>
-                    </div>
-                    <div class="col-md-3">
+                    </div> --}}
+                    <div class="col-md-3 offset-6">
                         <div class="dropdown">
                             <button href="#" class="btn btn-sm btn-light text-dark dropdown-toggle w-100"
                                 data-bs-toggle="dropdown" data-bs-auto-close="false" id="filter">
@@ -312,12 +312,11 @@
                 return (similar);
             }
 
-            var table = $('#rawTable').DataTable({
+            var options = {
                 order: [
                     // [20, 'desc'],
                     [18, 'desc']
                 ],
-                dom: 'Bfrtip',
                 buttons: [
                     'pageLength', {
                         extend: 'excel',
@@ -336,11 +335,6 @@
                         }
                     },
                 ],
-                lengthMenu: [
-                    [10, 50, 100, -1],
-                    ['10 Leads', '50 Leads', '100 Leads', 'Show all']
-                ],
-                scrollX: true,
                 columnDefs: [{
                     width: 20,
                     targets: 0
@@ -349,8 +343,6 @@
                     left: (widthView < 768) ? 3 : 4,
                     right: 2
                 },
-                processing: true,
-                serverSide: true,
                 ajax: {
                     url: '',
                     data: function(params) {
@@ -549,7 +541,9 @@
                         $('td', row).addClass('table-success');
                     }
                 }
-            });
+            };
+
+            var table = initializeDataTable('#rawTable', options, 'rt_client');
 
             /* for advanced filter */
             $("#school-name").on('change', function(e) {

@@ -35,6 +35,7 @@ use App\Interfaces\ReasonRepositoryInterface;
 use App\Imports\MasterStudentImport;
 use App\Imports\StudentImport;
 use App\Interfaces\UserRepositoryInterface;
+use App\Jobs\Client\ProcessDefineCategory;
 use App\Models\ClientLeadTracking;
 use App\Models\Lead;
 use App\Models\School;
@@ -107,7 +108,7 @@ class ClientStudentController extends ClientController
     public function getClientProgramByStudentId(Request $request)
     {
         $studentId = $request->route('client');
-        return $this->clientProgramRepository->getAllClientProgramDataTables(['clientId' => $studentId]);
+        return $this->clientProgramRepository->getAllClientProgramDataTables_DetailUser(['clientId' => $studentId]);
     }
 
     public function getClientEventByStudentId(Request $request)
@@ -119,9 +120,9 @@ class ClientStudentController extends ClientController
 
     public function index(Request $request)
     {
+        $statusClient = $request->get('st');
         if ($request->ajax()) {
 
-            $statusClient = $request->get('st');
             $asDatatables = true;
 
             # advanced filter purpose
@@ -172,7 +173,7 @@ class ClientStudentController extends ClientController
                     break;
 
                 default:
-                    $model = $this->clientRepository->getAllClientStudent($advanced_filter);
+                    $model = $this->clientRepository->getAllClientStudent($advanced_filter, $asDatatables);
             }
 
             return $this->clientRepository->getDataTables($model);
@@ -180,7 +181,7 @@ class ClientStudentController extends ClientController
 
         $entries = app('App\Services\ClientStudentService')->advancedFilterClient();
 
-        return view('pages.client.student.index')->with($entries);
+        return view('pages.client.student.index')->with($entries + ['st' => $statusClient]);
     }
 
     public function indexRaw(Request $request)
@@ -224,7 +225,7 @@ class ClientStudentController extends ClientController
 
     public function show(Request $request)
     {
-        
+                
         $studentId = $request->route('student');
         $student = $this->clientRepository->getClientById($studentId);
 
@@ -298,6 +299,9 @@ class ClientStudentController extends ClientController
                 throw new Exception('Failed to store new student', 3);
 
             $newStudentId = $newStudentDetails->id;
+            
+            # trigger define category client
+            ProcessDefineCategory::dispatch([$newStudentId])->onQueue('define-category-client');
 
             # case 4 (optional)
             # add relation between parent and student
@@ -538,6 +542,9 @@ class ClientStudentController extends ClientController
             if (!$student = $this->clientRepository->updateClient($studentId, $data['studentDetails']))
                 throw new Exception('Failed to update student information', 3);
 
+
+            # trigger define category client
+            ProcessDefineCategory::dispatch([$studentId])->onQueue('define-category-client');
 
             # case 4
             # add relation between parent and student
@@ -1008,7 +1015,8 @@ class ClientStudentController extends ClientController
             'phone' => $this->setPhoneNumber($request->phoneFinal),
             'graduation_year' => $request->graduationFinal,
             'sch_id' => $request->schoolFinal,
-            'is_verified' => 'Y'
+            'is_verified' => 'Y',
+            'category' => 'new-lead'
         ];
 
         if ($request->parentName != null) {
@@ -1208,24 +1216,30 @@ class ClientStudentController extends ClientController
         if (!$pic)
             return response()->json(['success' => false, 'message' => 'We require a selection to proceed. Please review the available options and choose one.'], 500);
 
-        $picDetails = [];
+        $picDetails = new Collection();
 
         DB::beginTransaction();
         try {
 
             foreach ($clientIds as $clientId) {
-                $picDetails[] = [
+
+                if ($picDetails->where('client_id', $clientId)->first())
+                    continue;
+                
+                $picDetails->push([
                     'client_id' => $clientId,
                     'user_id' => $pic,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
-                ];
+                ]);
 
                 if ($client = $this->clientRepository->checkActivePICByClient($clientId)) 
                     $this->clientRepository->inactivePreviousPIC($client);
             }
 
-            $this->clientRepository->insertPicClient($picDetails);
+            # because insert sql need data type as array
+            # meaning: collection has to be converted into array
+            $this->clientRepository->insertPicClient($picDetails->toArray());
             
             DB::commit();
 

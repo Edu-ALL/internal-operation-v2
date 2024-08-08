@@ -39,6 +39,7 @@ use App\Interfaces\SchoolRepositoryInterface;
 use App\Interfaces\SchoolCurriculumRepositoryInterface;
 use App\Interfaces\RoleRepositoryInterface;
 use App\Interfaces\TagRepositoryInterface;
+use App\Jobs\Client\ProcessDefineCategory;
 use App\Jobs\RawClient\ProcessVerifyClient;
 use App\Jobs\RawClient\ProcessVerifyClientParent;
 use App\Models\Client;
@@ -339,8 +340,20 @@ class ClientEventController extends Controller
             // Case 3
             // Create client event
             # insert into client event
-            if (!$this->clientEventRepository->createClientEvent($clientEvents))
+            if (!$storedClientEvent = $this->clientEventRepository->createClientEvent($clientEvents))
                 throw new Exception('Failed to store new client event', 3);
+
+
+            # Case 4
+            # Generate ticket ID when the event is offline or hybrid
+            # Updated generate ticket ID for all events 
+
+            // if (in_array($storedClientEvent->event->type, ['offline', 'hybrid'])) {
+
+                $ticketID = app('App\Http\Controllers\Api\v1\ExtClientController')->generateTicketID();
+                $this->clientEventRepository->updateClientEvent($storedClientEvent->clientevent_id, ['ticket_id' => $ticketID]);
+            // }
+            
 
             DB::commit();
         } catch (Exception $e) {
@@ -476,7 +489,18 @@ class ClientEventController extends Controller
         DB::beginTransaction();
         try {
 
-            $this->clientEventRepository->updateClientEvent($clientevent_id, $clientEvent);
+            $newClientEvent = $this->clientEventRepository->updateClientEvent($clientevent_id, $clientEvent);
+
+            # Generate ticket ID when the event is offline or hybrid
+            # Updated generate ticket ID for all events 
+            
+            // if (in_array($newClientEvent->event->type, ['offline', 'hybrid'])) {
+
+                $ticketID = app('App\Http\Controllers\Api\v1\ExtClientController')->generateTicketID();
+                $this->clientEventRepository->updateClientEvent($newClientEvent->clientevent_id, ['ticket_id' => $ticketID]);
+            // }
+            
+            //! it supposed to be a function to remove the ticket ID when the event was changed into online (yet to be developed)
 
             DB::commit();
         } catch (Exception $e) {
@@ -875,6 +899,9 @@ class ClientEventController extends Controller
             ProcessVerifyClientParent::dispatch([$parentId])->onQueue('verifying-client-parent');
             # trigger to verifying children
             ProcessVerifyClient::dispatch([$childId])->onQueue('verifying-client');
+            # trigger define category client
+            ProcessDefineCategory::dispatch([$childId])->onQueue('define-category-client');
+
             
         } else if ($choosen_role == 'student') {
             # to prevent empty parent name being stored into database
@@ -886,6 +913,9 @@ class ClientEventController extends Controller
             $childId = $newClientDetails[0]['id'] = $clientArrayIds[0];
             # trigger to verifying children
             ProcessVerifyClient::dispatch([$childId])->onQueue('verifying-client');
+            # trigger define category client
+            ProcessDefineCategory::dispatch([$childId])->onQueue('define-category-client');
+
 
         } else {
             $teacherId = $newClientDetails[0]['id'] = $clientArrayIds[0];

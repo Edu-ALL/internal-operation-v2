@@ -21,6 +21,9 @@ use App\Http\Traits\LoggingTrait;
 use App\Interfaces\ClientLeadTrackingRepositoryInterface;
 use App\Interfaces\ClientProgramLogMailRepositoryInterface;
 use App\Interfaces\TagRepositoryInterface;
+use App\Jobs\Client\ProcessDefineCategory;
+use App\Models\Bundling;
+use App\Models\BundlingDetail;
 use App\Models\Program;
 use App\Models\School;
 use App\Models\UserClient;
@@ -36,6 +39,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ClientProgramController extends Controller
 {
@@ -142,9 +147,24 @@ class ClientProgramController extends Controller
         $programs = $this->clientProgramRepository->getAllProgramOnClientProgram();
         $mainPrograms = $this->clientProgramRepository->getAllMainProgramOnClientProgram();
         $schools = $this->schoolRepository->getAllSchools();
-        $conversion_leads = $this->clientProgramRepository->getAllConversionLeadOnClientProgram();
+        // $conversion_leads = $this->clientProgramRepository->getAllConversionLeadOnClientProgram();
         $mentor_tutors = $this->clientProgramRepository->getAllMentorTutorOnClientProgram();
         $pics = $this->clientProgramRepository->getAllPICOnClientProgram();
+        $main_leads = $this->leadRepository->getAllMainLead();
+        $main_leads = $main_leads->map(function ($item) {
+            return [
+                'lead_id' => $item->lead_id,
+                'main_lead' => $item->main_lead
+            ];
+        });
+        $sub_leads = $this->leadRepository->getAllKOLlead();
+        $sub_leads = $sub_leads->map(function ($item) {
+            return [
+                'lead_id' => $item->lead_id,
+                'main_lead' => $item->sub_lead
+            ];
+        });
+        $conversion_leads = $main_leads->merge($sub_leads);
 
         return view('pages.program.client-program.index')->with(
             [
@@ -497,6 +517,9 @@ class ClientProgramController extends Controller
                     $this->clientLeadTrackingRepository->updateClientLeadTrackingById($leadTracking->id, ['status' => 0]);
                 }
             }
+
+            # trigger to define category child
+            ProcessDefineCategory::dispatch([$studentId])->onQueue('define-category-client');
 
             DB::commit();
         } catch (Exception $e) {
@@ -862,6 +885,10 @@ class ClientProgramController extends Controller
                 }
             }
 
+            # trigger to define category child
+            ProcessDefineCategory::dispatch([$studentId])->onQueue('define-category-client');
+
+
             DB::commit();
         } catch (Exception $e) {
 
@@ -894,6 +921,9 @@ class ClientProgramController extends Controller
         try {
 
             $this->clientProgramRepository->deleteClientProgram($clientProgramId);
+            # trigger to define category child
+            ProcessDefineCategory::dispatch([$studentId])->onQueue('define-category-client');
+
             DB::commit();
         } catch (Exception $e) {
 
@@ -913,9 +943,10 @@ class ClientProgramController extends Controller
     {
         $programName = $request->get('program_name');
         if ($programName == null)
-            abort('404');
+            abort(404);
         
-        $program = $this->programRepository->getProgramByName($programName);
+        if (!$program = $this->programRepository->getProgramByName($programName))
+            abort(404);
 
         $leads = $this->leadRepository->getLeadForFormEmbedEvent();
         $schools = $this->schoolRepository->getAllSchools();
@@ -1086,6 +1117,9 @@ class ClientProgramController extends Controller
                 $this->sendMailThanks($storedClientProgram, $parentId, $childId);
             }
 
+            # trigger define category client
+            ProcessDefineCategory::dispatch([$childId])->onQueue('define-category-client');
+
             DB::commit();
         
         } catch (Exception $e) {
@@ -1112,8 +1146,8 @@ class ClientProgramController extends Controller
         $children = $this->clientRepository->getClientById($childId);
         
         $recipientDetails = [
-            'name' => $parent->full_name,  
-            'mail' => $parent->mail,
+            'name' => $parent->mail != null ? $parent->full_name : $children->full_name,  
+            'mail' => $parent->mail != null ? $parent->mail : $children->mail,
             'children_details' => [
                 'name' => $children->full_name
             ]
@@ -1150,5 +1184,160 @@ class ClientProgramController extends Controller
         ];
 
         return $this->clientProgramLogMailRepository->createClientProgramLogMail($logDetails);
+    }
+
+    public function addBundleProgram(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $clientProgram = $clientProgramDetails = [];
+            $uuid = (string) Str::uuid();
+    
+            foreach ($request->choosen as $key => $clientprog_id) {
+                // fetch data client program
+                $clientprog_db = $this->clientProgramRepository->getClientProgramById($clientprog_id);
+                
+                // check there is an invoice 
+                $hasInvoiceStd = isset($clientprog_db->invoice) ? $clientprog_db->invoice()->count() : 0;
+                $hasBundling = isset($clientprog_db->bundlingDetail) ? $clientprog_db->bundlingDetail()->count() : 0;
+    
+                $clientProgram[$request->number[$key]] = [
+                    'clientprog_id' => $clientprog_id,
+                    'status' => $clientprog_db->status,
+                    'program' => $clientprog_db->prog_id,
+                    'HasInvoice' => $hasInvoiceStd,
+                    'HasBundling' => $hasBundling,
+                ];
+                
+                $clientProgramDetails[] = [
+                    'clientprog_id' => $clientprog_id,
+                    'bundling_id' => $uuid,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ];
+            }
+    
+            $rules = [
+                '*.clientprog_id' => ['required', 'exists:tbl_client_prog,clientprog_id'],
+                '*.status' => ['required', 'in:1'],
+                '*.HasInvoice' => function($attribute, $value, $fail) {
+                    if((int)$value > 0){
+                        $fail('This program already has an invoice');
+                    }
+                },
+                '*.HasBundling' => function($attribute, $value, $fail) {
+                    if((int)$value > 0){
+                        $fail('This program is already in the bundle package');
+                    }
+                },
+                // '*.program' => ['required', 'distinct']
+
+            ];
+    
+            $validator = Validator::make($clientProgram, $rules);
+    
+            # threw error if validation fails
+            if ($validator->fails()) {
+                Log::warning($validator->errors());
+    
+                return response()->json([
+                    'success' => false,
+                    'error' => $validator->errors()
+                ]);
+            }
+    
+            $bundleProgram = $this->clientProgramRepository->createBundleProgram($uuid, $clientProgramDetails);
+    
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error($e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Something went wrong. Please try again'
+            ], 500);
+        }
+     
+        
+        return response()->json([
+            'success' => true,
+            'data' => $bundleProgram
+        ]);
+
+    }
+
+    public function cancelBundleProgram(Request $request){
+
+        DB::beginTransaction();
+
+        try {
+            $clientProgram = $clientProgramDetails = [];
+            $bundlingId = $request->bundlingId;
+    
+            foreach ($request->choosen as $key => $clientprog_id) {
+                // fetch data client program
+                $clientprog_db = $this->clientProgramRepository->getClientProgramById($clientprog_id);
+                
+                // check there is an invoice 
+                $hasInvoiceStd = isset($clientprog_db->invoice) ? $clientprog_db->invoice()->count() : 0;
+               
+                $hasBundling = isset($clientprog_db->bundlingDetail) ? $clientprog_db->bundlingDetail()->count() : 0;
+
+                $clientProgram[$request->number[$key]] = [
+                    'clientprog_id' => $clientprog_id,
+                    'status' => $clientprog_db->status,
+                    'HasInvoice' => $hasInvoiceStd,
+                    'HasBundling' => $hasBundling,
+                ];
+                
+            }
+    
+            $rules = [
+                '*.clientprog_id' => ['required', 'exists:tbl_client_prog,clientprog_id'],
+                '*.status' => ['required', 'in:1'],
+                '*.HasInvoice' => function($attribute, $value, $fail) {
+                    if((int)$value > 0){
+                        $fail('This program already has an invoice');
+                    }
+                },
+                '*.HasBundling' => function($attribute, $value, $fail) {
+                    if((int)$value == 0){
+                        $fail('This is not a bundle program');
+                    }
+                },
+            ];
+    
+            $validator = Validator::make($clientProgram, $rules);
+    
+            # threw error if validation fails
+            if ($validator->fails()) {
+                Log::warning($validator->errors());
+    
+                return response()->json([
+                    'success' => false,
+                    'error' => $validator->errors()
+                ]);
+            }
+    
+            $deletedBundleProgram = $this->clientProgramRepository->deleteBundleProgram($bundlingId);
+    
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error($e->getMessage() . 'Line: '. $e->getLine());
+            return response()->json([
+                'success' => false,
+                'error' => 'Something went wrong. Please try again'
+            ], 500);
+        }
+     
+        
+        return response()->json([
+            'success' => true,
+            'data' => $deletedBundleProgram
+        ]);
     }
 }

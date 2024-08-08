@@ -20,6 +20,7 @@ class InvoiceProgram extends Model
      */
     protected $fillable = [
         'inv_id',
+        'bundling_id',
         'clientprog_id',
         'ref_id',
         'inv_category',
@@ -36,6 +37,7 @@ class InvoiceProgram extends Model
         'session',
         'duration',
         'inv_paymentmethod',
+        'invoice_date',
         'inv_duedate',
         'inv_notes',
         'inv_tnc',
@@ -187,5 +189,15 @@ class InvoiceProgram extends Model
     public function invoiceAttachment()
     {
         return $this->hasMany(InvoiceAttachment::class, 'inv_id', 'inv_id');
+    }
+
+    /**
+     * 
+     * Get the bundling for the invoice
+     * 
+     */
+    public function bundling()
+    {
+        return $this->belongsTo(Bundling::class, 'bundling_id', 'uuid');
     }
 }

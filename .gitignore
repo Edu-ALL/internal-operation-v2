@@ -1,5 +1,4 @@
 /node_modules
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
@@ -25,3 +24,5 @@ yarn-error.log
 .composer.lock
 composer.lock
 error_log
+.ftpquota
+.htaccess

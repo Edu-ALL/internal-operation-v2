@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class ClientProgram extends Model
 {
@@ -13,7 +14,7 @@ class ClientProgram extends Model
 
     protected $table = 'tbl_client_prog';
     protected $primaryKey = 'clientprog_id';
-    protected $appends = ['referral_name'];
+    protected $appends = ['strip_tag_notes', 'referral_name'];
 
     /**
      * The attributes that should be visible in arrays.
@@ -72,10 +73,54 @@ class ClientProgram extends Model
         'updated_at'
     ];
 
+    protected function conversionLead(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $this->lead != NULL ? $this->getConversionLead($this->lead->main_lead) : NULL
+        );
+    }
+
+    public function getConversionLead($parameter)
+    {
+        switch ($parameter) {
+            case "All-In Event":
+                if ($this->event != NULL)
+                    return "ALL-In Event - " . $this->event->event_title;
+                else
+                    return "ALL-In Event";
+                break;
+
+            case "External Edufair":
+                if($this->eduf_id == NULL){
+                    return $this->lead->main_lead;
+                }
+
+                if ($this->external_edufair->title != NULL)
+                    return "External Edufair - " . $this->external_edufair->title;
+                else
+                    return "External Edufair - " . $this->external_edufair->organizerName;
+                break;
+
+            case "KOL":
+                return "KOL - " . $this->lead->sub_lead;
+                break;
+
+            default:
+                return $this->lead->main_lead;
+        }
+    }
+
     protected function referralName(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => $this->referral_code != NULL ? $this->getReferralNameFromRefCodeView($this->referral_code) : NULL
+        );
+    }
+
+    protected function stripTagNotes(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => substr(strip_tags($this->meeting_notes), 0, 50)
         );
     }
 
@@ -95,10 +140,20 @@ class ClientProgram extends Model
     
 
     # attributes
+    protected function conversionTime(): Attribute
+    {
+        $successDate = Carbon::parse($this->success_date);
+        $firstDiscussDate = Carbon::parse($this->first_discuss_date);
+
+        return Attribute::make(
+            get: fn ($value) => $successDate->diffInDays($firstDiscussDate),
+        );
+    }
+
     protected function programName(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $this->program->prog_program . ' - ' . $this->program->main_prog->main_prog_name,
+            get: fn ($value) => $value,
         );
     }
 
@@ -133,6 +188,11 @@ class ClientProgram extends Model
     public function program()
     {
         return $this->belongsTo(Program::class, 'prog_id', 'prog_id');
+    }
+
+    public function viewProgram()
+    {
+        return $this->belongsTo(ViewProgram::class, 'prog_id', 'prog_id');
     }
 
     public function lead()
@@ -205,4 +265,10 @@ class ClientProgram extends Model
     {
         return $this->belongsToMany(User::class, 'tbl_pic_client', 'client_id', 'user_id');
     }
+
+    public function bundlingDetail()
+    {
+        return $this->hasOne(BundlingDetail::class, 'clientprog_id', 'clientprog_id');
+    }
+
 }

@@ -26,7 +26,7 @@
             </div>
             <div class="col-md-7">
                 <div class="row g-1">
-                    <div class="col-md-3 col-8">
+                    {{-- <div class="col-md-3 col-8">
                         <a href="{{ url('api/download/excel-template/parent') }}"
                             class="btn btn-sm btn-light text-info btn-download w-100"><i class="bi bi-download"></i> <span
                                 class="ms-1">Template</span></a>
@@ -35,8 +35,8 @@
                         <a href="javascript:void(0)" class="btn btn-sm btn-light text-info btn-import w-100"
                             data-bs-toggle="modal" data-bs-target="#importData"><i class="bi bi-cloud-upload"></i> <span
                                 class="ms-1">Import</span></a>
-                    </div>
-                    <div class="col-md-3">
+                    </div> --}}
+                    <div class="col-md-3 offset-6">
                         <div class="dropdown">
                             <button href="#" class="btn btn-sm btn-light text-dark dropdown-toggle w-100"
                                 data-bs-toggle="dropdown" data-bs-auto-close="false" id="filter">
@@ -158,26 +158,18 @@
     <script>
         var widthView = $(window).width();
         $(document).ready(function() {
-            var table = $('#clientTable').DataTable({
-                searchDelay: 500,
-                dom: 'Bfrtip',
-                lengthMenu: [
-                    [10, 25, 50, 100, -1],
-                    ['10 rows', '25 rows', '50 rows', '100 rows', 'Show all']
-                ],
+
+            var options = {
                 buttons: [
                     'pageLength', {
                         extend: 'excel',
                         text: 'Export to Excel',
                     }
                 ],
-                scrollX: true,
                 fixedColumns: {
                     left: (widthView < 768) ? 1 : 2,
                     right: 1
                 },
-                processing: true,
-                serverSide: true,
                 ajax: {
                     url: '',
                     data: function (params) {
@@ -227,7 +219,9 @@
                         defaultContent: '<button type="button" class="btn btn-sm btn-outline-warning editClient" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="More Detail"><i class="bi bi-eye"></i></button>'
                     }
                 ],
-            });
+            }
+
+            var table = initializeDataTable('#clientTable', options, 'rt_client');
 
             @php
                 $privilage = $menus['Client']->where('submenu_name', 'Parents')->first();

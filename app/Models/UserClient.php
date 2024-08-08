@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\pivot\ClientAcceptance;
 use App\Models\pivot\ClientLeadTracking;
+use App\Observers\ClientObserver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,9 @@ use Illuminate\Support\Facades\Session;
 use Laravel\Sanctum\HasApiTokens;
 use Mostafaznv\LaraCache\CacheEntity;
 use Mostafaznv\LaraCache\Traits\LaraCache;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
+#[ObservedBy([ClientObserver::class])]
 class UserClient extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -67,6 +70,8 @@ class UserClient extends Authenticatable
         'is_verified',
         'register_as',
         'referral_code',
+        'category',
+        'took_ia',
         'created_at',
         'updated_at',
     ];
@@ -231,6 +236,10 @@ class UserClient extends Authenticatable
                 break;
 
             case "External Edufair":
+                if($this->eduf_id == NULL){
+                    return $this->lead->main_lead;
+                }
+
                 if ($this->external_edufair->title != NULL)
                     return "External Edufair - " . $this->external_edufair->title;
                 else

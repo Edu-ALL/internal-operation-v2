@@ -51,10 +51,10 @@ return new class extends Migration
             END COLLATE utf8mb4_unicode_ci) AS referral_name,
             s.sch_name as school_name,
             (CASE 
-                WHEN l.main_lead = "KOL" THEN CONCAT("KOL - ", l.sub_lead)
-                WHEN l.main_lead = "External Edufair" THEN CONCAT("External Edufair - ", el.title)
-                WHEN l.main_lead = "All-In Event" THEN CONCAT("All-In Event - ", ts.event_title)
-                ELSE l.main_lead
+                WHEN l.main_lead COLLATE utf8mb4_unicode_ci = "KOL" THEN CONCAT("KOL - ", l.sub_lead COLLATE utf8mb4_unicode_ci)
+                WHEN l.main_lead COLLATE utf8mb4_unicode_ci = "External Edufair" THEN (CASE WHEN c.eduf_id is not null THEN vel.organizer_name else "External Edufair" END)
+                WHEN l.main_lead COLLATE utf8mb4_unicode_ci = "All-In Event" THEN CONCAT("All-In Event - ", ts.event_title COLLATE utf8mb4_unicode_ci)
+                ELSE l.main_lead COLLATE utf8mb4_unicode_ci
             END) AS lead_source,
             GetTotalScore (
                 s.sch_score, 
@@ -96,7 +96,7 @@ return new class extends Migration
                 ) FROM tbl_client_event ce
                     JOIN tbl_events evt ON evt.event_id = ce.event_id
                     WHERE ce.client_id = c.id GROUP BY ce.client_id) as joined_event,
-            (SELECT GROUP_CONCAT(DISTINCT CONCAT(sqmp.prog_name, " - ", sqp.prog_program) SEPARATOR ", ") FROM tbl_interest_prog sqip
+            (SELECT GROUP_CONCAT(DISTINCT CONCAT(sqmp.prog_name COLLATE utf8mb4_general_ci, " - ", sqp.prog_program COLLATE utf8mb4_general_ci) SEPARATOR ", ") COLLATE utf8mb4_general_ci FROM tbl_interest_prog sqip
                     LEFT JOIN tbl_prog sqp ON sqp.prog_id = sqip.prog_id
                     LEFT JOIN tbl_main_prog sqmp ON sqmp.id = sqp.main_prog_id
                     WHERE sqip.client_id = c.id GROUP BY sqip.client_id) as interest_prog,
@@ -143,12 +143,12 @@ return new class extends Migration
             (SELECT pic.user_id 
                         FROM tbl_pic_client pic
                     LEFT JOIN users u on u.id = pic.user_id
-                    WHERE pic.client_id = c.id AND pic.status = 1)
+                    WHERE pic.client_id = c.id AND pic.status = 1 LIMIT 1)
              as pic_id,
             (SELECT CONCAT (u.first_name, " ", COALESCE(u.last_name, "")) 
                         FROM tbl_pic_client pic
                     LEFT JOIN users u on u.id = pic.user_id
-                    WHERE pic.client_id = c.id AND pic.status = 1)
+                    WHERE pic.client_id = c.id AND pic.status = 1 LIMIT 1)
              as pic_name
             
         
@@ -159,6 +159,8 @@ return new class extends Migration
                 ON l.lead_id = c.lead_id
             LEFT JOIN tbl_eduf_lead el
                 ON el.id = c.eduf_id
+            LEFT JOIN eduf_lead vel 
+                ON vel.id = el.id
             LEFT JOIN tbl_events ts
                 ON ts.event_id = c.event_id
         ');
