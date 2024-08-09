@@ -91,26 +91,41 @@
     <script>
         var myEditor;
 
-        document.querySelectorAll( 'textarea' ).forEach(function (element) {
+        document.querySelectorAll('textarea').forEach(function(element) {
             ClassicEditor
-                .create( element, {
-                    toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote' ],
+                .create(element, {
+                    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList',
+                        'blockQuote'
+                    ],
                     heading: {
-                        options: [
-                            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-                            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' }
+                        options: [{
+                                model: 'paragraph',
+                                title: 'Paragraph',
+                                class: 'ck-heading_paragraph'
+                            },
+                            {
+                                model: 'heading1',
+                                view: 'h1',
+                                title: 'Heading 1',
+                                class: 'ck-heading_heading1'
+                            },
+                            {
+                                model: 'heading2',
+                                view: 'h2',
+                                title: 'Heading 2',
+                                class: 'ck-heading_heading2'
+                            }
                         ]
                     }
-                } )
-                .then( editor => {
+                })
+                .then(editor => {
                     console.log('Editor was initialized', editor);
                     myEditor = editor;
                 })
-                .catch( error => {
-                    console.error( error );
-                } );
-        })        
+                .catch(error => {
+                    console.error(error);
+                });
+        })
     </script>
 
     {{-- Tooltip  --}}
@@ -126,6 +141,7 @@
     <script src="{{ asset('js/general-use-script.js') }}"></script>
 
     <script>
+
         function initializeDataTable(selector, options, tableName) {
             var table = $(selector).DataTable({
                 ...options,
@@ -142,15 +158,17 @@
                 serverSide: true,
             });
 
-            // listen reverb for datatable
-            var channel = Echo.channel('channel-datatable');
-            channel.listen("UpdateDatatableEvent", function(data) {
-                if(data.tableName == tableName){
+            // listen channel datatable for datatable
+            var channel_datatable = Echo.channel('channel-datatable');
+            channel_datatable.listen(".my-event", function(data) {
+                if(data.message == tableName){
                     table.ajax.reload(null, false)
                 }
             })
 
             return table;
+
+
         }
 
         // Realtime datatable
@@ -171,21 +189,26 @@
             htmlLoading += '<span class="spinner-border spinner-border-sm text-black" aria-hidden="true"></span>'
             htmlLoading += '<span class="ms-2 text-black" role="status">Importing...</span>'
             htmlLoading += '</div>'
-            
+
             @php
-                $authImport = Cache::has("auth") ? Cache::get("auth") : null;
-                $isStart = Cache::has("isStartImport") ? Cache::get("isStartImport") : null;
+                $authImport = Cache::has('auth') ? Cache::get('auth') : null;
+                $isStart = Cache::has('isStartImport') ? Cache::get('isStartImport') : null;
             @endphp
 
             @php
-                $authImport = Cache::has("auth") ? Cache::get("auth") : null;
-                $isStart = Cache::has("isStartImport") ? Cache::get("isStartImport") : null;
+                $authImport = Cache::has('auth') ? Cache::get('auth') : null;
+                $isStart = Cache::has('isStartImport') ? Cache::get('isStartImport') : null;
             @endphp
 
-            @if (($authImport != null && $isStart != null && Auth::user() != null) && (Auth::user()->id == $authImport['id']) && ($isStart))
+            @if (
+                $authImport != null &&
+                    $isStart != null &&
+                    Auth::user() != null &&
+                    Auth::user()->id == $authImport['id'] &&
+                    $isStart)
                 $('#loading-import').html(htmlLoading);
             @endif
-            
+
             $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
 
                 if (settings && settings.jqXHR && settings.jqXHR.status == 401) {
@@ -351,16 +374,18 @@
     </script>
 
     {{-- TinyMCE  --}}
-    // <script>
-    //     tinymce.init({
-    //         strict_loading_mode : true,
-    //         selector: 'textarea',
-    //         height: "250",
-    //         menubar: false,
-    //         // plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-    //         toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-    //     });
-    // </script>
+    //
+    <script>
+        //     tinymce.init({
+        //         strict_loading_mode : true,
+        //         selector: 'textarea',
+        //         height: "250",
+        //         menubar: false,
+        //         // plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        //         toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+        //     });
+        // 
+    </script>
 
     {{-- Select2  --}}
     <script>
@@ -379,7 +404,7 @@
         }
     </script>
 
-    
+
 
     @stack('scripts')
 </body>
