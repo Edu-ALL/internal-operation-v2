@@ -73,80 +73,80 @@
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
     {{-- Pusher --}}
-    <script>
+    <!--<script>-->
         // Enable pusher logging - don't include this in production
-        @env('local')
-            Pusher.logToConsole = true;
-        @endenv
+    <!--    @env('local')-->
+    <!--        Pusher.logToConsole = true;-->
+    <!--    @endenv-->
 
-        var pusher = new Pusher('{{ env("PUSHER_APP_KEY") }}', {
-            cluster: '{{ env("PUSHER_APP_CLUSTER") }}'
-        });
+    <!--    var pusher = new Pusher('{{ env("PUSHER_APP_KEY") }}', {-->
+    <!--        cluster: '{{ env("PUSHER_APP_CLUSTER") }}'-->
+    <!--    });-->
 
-        var validationImport = pusher.subscribe('validation-import');
-        var progressImport = pusher.subscribe('progress-import');
-        var html = '';
-        var htmlLoading = '';
+    <!--    var validationImport = pusher.subscribe('validation-import');-->
+    <!--    var progressImport = pusher.subscribe('progress-import');-->
+    <!--    var html = '';-->
+    <!--    var htmlLoading = '';-->
 
-        $('#content-import-information').html('');
+    <!--    $('#content-import-information').html('');-->
 
-        htmlLoading += '<div>'
-        htmlLoading += '<span class="spinner-border spinner-border-sm text-black" aria-hidden="true"></span>'
-        htmlLoading += '<span class="ms-2 text-black" role="status">Importing...</span>'
-        htmlLoading += '</div>'
+    <!--    htmlLoading += '<div>'-->
+    <!--    htmlLoading += '<span class="spinner-border spinner-border-sm text-black" aria-hidden="true"></span>'-->
+    <!--    htmlLoading += '<span class="ms-2 text-black" role="status">Importing...</span>'-->
+    <!--    htmlLoading += '</div>'-->
 
-        validationImport.bind('my-event', function(data) {
-            if(data.message !== null){
-                html = '';
-                html += `<h5>${data.message.progress.import_name}</h5>`;
-                html += `<ul>`;
-                html += `<li>Total Imported: ${parseInt(data.message.progress.total_row) - data.message.progress.total_error}</li>`
-                html += `<li>Total error: ${data.message.progress.total_error}</li>`
-                html += `</ul>`
+    <!--    validationImport.bind('my-event', function(data) {-->
+    <!--        if(data.message !== null){-->
+    <!--            html = '';-->
+    <!--            html += `<h5>${data.message.progress.import_name}</h5>`;-->
+    <!--            html += `<ul>`;-->
+    <!--            html += `<li>Total Imported: ${parseInt(data.message.progress.total_row) - data.message.progress.total_error}</li>`-->
+    <!--            html += `<li>Total error: ${data.message.progress.total_error}</li>`-->
+    <!--            html += `</ul>`-->
                 
-                if(data.message.progress.total_error > 0){
-                    html += `<h5>Validation</h5>`;
-                    html += `<ul>`;
-                    Object.entries(data.message).forEach(function([key, messages]){
-                        if(messages !== null && key != 'user_id' && key != 'progress'){
-                            Object.entries(messages).forEach(([key2, value]) => {
-                                html += `<li class="text-danger">${value}</li>`
-                            });
-                        }
-                    });
-                    html += `</ul>`
-                }
+    <!--            if(data.message.progress.total_error > 0){-->
+    <!--                html += `<h5>Validation</h5>`;-->
+    <!--                html += `<ul>`;-->
+    <!--                Object.entries(data.message).forEach(function([key, messages]){-->
+    <!--                    if(messages !== null && key != 'user_id' && key != 'progress'){-->
+    <!--                        Object.entries(messages).forEach(([key2, value]) => {-->
+    <!--                            html += `<li class="text-danger">${value}</li>`-->
+    <!--                        });-->
+    <!--                    }-->
+    <!--                });-->
+    <!--                html += `</ul>`-->
+    <!--            }-->
 
-                if( '{{ Auth::user() != null ? Auth::user()->id : null }}' == data.message.progress.user_id ){
-                    $("#modal-validation-import").modal('show');
-                    $('#content-import-information').html(html);
-                    $('#loading-import').html('');
-                }
-            }
-        });
+    <!--            if( '{{ Auth::user() != null ? Auth::user()->id : null }}' == data.message.progress.user_id ){-->
+    <!--                $("#modal-validation-import").modal('show');-->
+    <!--                $('#content-import-information').html(html);-->
+    <!--                $('#loading-import').html('');-->
+    <!--            }-->
+    <!--        }-->
+    <!--    });-->
 
-        progressImport.bind('my-event', function(data) {
-            html = ''
+    <!--    progressImport.bind('my-event', function(data) {-->
+    <!--        html = ''-->
 
-            html += '<h3>Import Done</h3>';
+    <!--        html += '<h3>Import Done</h3>';-->
 
-            html += `<li>Total Imported: ${parseInt(data.message.total_row) - data.message.total_error}</li>`
-            html += `<li>Total Error: ${data.message.total_error}</li>`
+    <!--        html += `<li>Total Imported: ${parseInt(data.message.total_row) - data.message.total_error}</li>`-->
+    <!--        html += `<li>Total Error: ${data.message.total_error}</li>`-->
 
-            if(data.message !== null){
+    <!--        if(data.message !== null){-->
 
-                if( '{{ Auth::user() != null ? Auth::user()->id : null }}' == data.message.user_id ){
-                    if(data.message.isStart == true){
-                        $('#loading-import').html(htmlLoading);
-                    }
+    <!--            if( '{{ Auth::user() != null ? Auth::user()->id : null }}' == data.message.user_id ){-->
+    <!--                if(data.message.isStart == true){-->
+    <!--                    $('#loading-import').html(htmlLoading);-->
+    <!--                }-->
 
-                }
-            }
+    <!--            }-->
+    <!--        }-->
           
-        });
+    <!--    });-->
 
               
-    </script>
+    <!--</script>-->
     @stack('styles')
 </head>
 
