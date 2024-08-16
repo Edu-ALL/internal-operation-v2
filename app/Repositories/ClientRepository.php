@@ -700,8 +700,8 @@ class ClientRepository implements ClientRepositoryInterface
             isVerified();
 
         return $asDatatables === false ?
-            ($groupBy === true ? $query->addSelect(DB::raw('YEAR(client.created_at) AS year'))->orderBy('client.created_at', 'desc')->get()->groupBy('year') : $query->get())
-            : $query->orderBy('first_name', 'asc');
+            ($groupBy === true ? $query->addSelect(DB::raw('YEAR(client.created_at) AS year'))->get()->groupBy('year') : $query->get())
+            : $query;
     }
 
     public function getAlumniMenteesSiblings()
@@ -762,8 +762,8 @@ class ClientRepository implements ClientRepositoryInterface
             isVerified();
 
         return $asDatatables === false ?
-            ($groupBy === true ? $query->addSelect(DB::raw('YEAR(client.created_at) AS year'))->orderBy('client.created_at', 'desc')->get()->groupBy('year') : $query->get())
-            : $query->orderBy('first_name', 'asc');
+            ($groupBy === true ? $query->addSelect(DB::raw('YEAR(client.created_at) AS year'))->get()->groupBy('year') : $query->get())
+            : $query;
     }
 
     public function getParents($asDatatables = false, $month = null, $advanced_filter = [])
@@ -805,7 +805,7 @@ class ClientRepository implements ClientRepositoryInterface
             $query->groupBy('client.id');
         }
 
-        return $asDatatables === false ? $query->get() : $query->groupBy('client.id')->orderBy('client.updated_at', 'desc');
+        return $asDatatables === false ? $query->get() : $query->groupBy('client.id');
     }
 
     public function getTeachers($asDatatables = false, $month = null)
@@ -815,7 +815,7 @@ class ClientRepository implements ClientRepositoryInterface
         })->
         isTeacher()->isActive()->isVerified();
 
-        return $asDatatables === false ? $query->get() : $query->orderBy('first_name', 'asc');
+        return $asDatatables === false ? $query->get() : $query;
     }
 
     public function getClientHotLeads($initialProgram)
@@ -935,7 +935,7 @@ class ClientRepository implements ClientRepositoryInterface
     public function getInactiveTeacher($asDatatables = false, $month = null, $advanced_filter = [])
     {
         $query = Client::isTeacher()->isNotActive();
-        return $asDatatables === false ? $query->orderBy('client.created_at', 'desc')->get() : $query;
+        return $asDatatables === false ? $query->get() : $query;
     }
 
     /* ~ END*/
@@ -1102,7 +1102,7 @@ class ClientRepository implements ClientRepositoryInterface
                     $q3->where('prog_name', '!=', 'Admissions Mentoring');
                 });
             });
-        })->orderBy('created_at', 'desc');
+        });
 
         return Datatables::eloquent($query)
             ->addColumn('parent_name', function ($data) {
@@ -1741,7 +1741,6 @@ class ClientRepository implements ClientRepositoryInterface
                 whereHas('roles', function ($subQuery) {
                     $subQuery->where('role_name', 'Parent');
                 })->
-                orderBy('deleted_at', 'desc')->
                 onlyTrashed()->
                 groupBy('client.id');
         return $asDatatables === false ? $query->get() : $query;
@@ -1816,7 +1815,7 @@ class ClientRepository implements ClientRepositoryInterface
 
         // return Datatables::eloquent($model)->make(true);
         
-        return $asDatatables === false ? $query->orderBy('updated_at', 'desc')->get() : $query->orderBy('updated_at', 'desc');
+        return $asDatatables === false ? $query->get() : $query;
     }
 
     public function getViewRawClientById($rawClientId)
