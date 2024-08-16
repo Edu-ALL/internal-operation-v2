@@ -203,7 +203,7 @@ trait SyncClientTrait
                     );
             
                     $existChildren = $mapChildren->where('deleted_at', null)->where('full_name', strtolower($secondClient))->first();
-                 
+
                     # if children not existing from this parent
                     if(!isset($existChildren)){
                         $secondClientDetails['isExist'] = false;
