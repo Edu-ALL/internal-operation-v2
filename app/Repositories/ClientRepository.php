@@ -1853,7 +1853,7 @@ class ClientRepository implements ClientRepositoryInterface
                 break;
 
             case 'parent':
-                $relation = ['school', 'childrens'];
+                $relation = ['school', 'childrens', 'clientProgram.program', 'parents'];
 
                 break;
 
