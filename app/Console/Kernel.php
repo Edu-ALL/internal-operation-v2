@@ -121,6 +121,7 @@ class Kernel extends ConsoleKernel
         
         # queue worker
         // $schedule->command('run:worker')->everyMinute()->withoutOverlapping()->onOneServer();
+        // $schedule->command('queue:work --queue=default,inv-send-to-client,inv-email-request-sign,verifying-client,verifying-client-parent,verifying-client-teacher,imports-student,imports-parent,imports-teacher,imports-client-event,imports-school-merge,verifying_client,verifying_clieng_parent,verifying_client_teacher,define-category-client,get-took-ia')->everyMinute()->withoutOverlapping()->onOneServer();
 
         # This command is no longer used, because it already uses queue
         # run verifying raw data
