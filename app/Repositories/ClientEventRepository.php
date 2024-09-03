@@ -414,7 +414,16 @@ class ClientEventRepository implements ClientEventRepositoryInterface
             ->leftJoin('tbl_roles', 'tbl_roles.id', '=', 'tbl_client_roles.role_id')
             ->leftJoin('tbl_client_prog', 'tbl_client_prog.client_id', '=', 'tbl_client.id')
             ->leftJoin('program', 'program.prog_id', '=', 'tbl_client_prog.prog_id')
+            ->leftJoin('tbl_client as parent', 'parent.id', '=', 
+                DB::raw('( SELECT
+                    MAX(parent_id) parent_id
+                    FROM tbl_client_relation as relation
+                    WHERE relation.child_id = tbl_client.id
+                )'))
             ->select(
+                'parent.id as parent_id',
+                'parent.mail as parent_mail',
+                'parent.phone as parent_phone',
                 'tbl_client.register_as',
                 'tbl_client_event.clientevent_id',
                 DB::raw('(CASE 
@@ -427,6 +436,7 @@ class ClientEventRepository implements ClientEventRepositoryInterface
                 'tbl_roles.role_name',
                 'tbl_client_prog.status',
             )->
+            selectRaw('RTRIM(CONCAT(parent.first_name, " ", COALESCE(parent.last_name, ""))) as parent_name')->
             when(isset($eventId), function ($subQuery) use ($eventId) {
                 $subQuery->where('tbl_client_event.event_id', $eventId);
             })->
@@ -443,7 +453,16 @@ class ClientEventRepository implements ClientEventRepositoryInterface
             ->leftJoin('tbl_roles', 'tbl_roles.id', '=', 'tbl_client_roles.role_id')
             ->leftJoin('tbl_client_prog', 'tbl_client_prog.client_id', '=', 'tbl_client.id')
             ->leftJoin('program', 'program.prog_id', '=', 'tbl_client_prog.prog_id')
+            ->leftJoin('tbl_client as parent', 'parent.id', '=', 
+                DB::raw('( SELECT
+                    MAX(parent_id) parent_id
+                    FROM tbl_client_relation as relation
+                    WHERE relation.child_id = tbl_client.id
+                )'))
             ->select(
+                'parent.id as parent_id',
+                'parent.mail as parent_mail',
+                'parent.phone as parent_phone',
                 'tbl_client.register_as',
                 'tbl_client_event.clientevent_id',
                 DB::raw('(CASE 
@@ -456,6 +475,7 @@ class ClientEventRepository implements ClientEventRepositoryInterface
                 'tbl_roles.role_name',
                 'tbl_client_prog.status',
             )->
+            selectRaw('RTRIM(CONCAT(parent.first_name, " ", COALESCE(parent.last_name, ""))) as parent_name')->
             when(isset($eventId), function ($subQuery) use ($eventId) {
                 $subQuery->where('tbl_client_event.event_id', $eventId);
             })->
