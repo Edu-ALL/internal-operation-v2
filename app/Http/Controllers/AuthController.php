@@ -62,7 +62,6 @@ class AuthController extends Controller
 
         }
 
-
         # login Success
         # create log success
         $this->logSuccess('auth', null, 'Login', $request->email);
