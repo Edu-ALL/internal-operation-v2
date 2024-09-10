@@ -88,8 +88,18 @@ Route::prefix('corporate')->name('corporate_prog.')->group(function () {
 
 Route::get('school', [SchoolProgramController::class, 'index'])->name('program.school.index');
 Route::post('school', [SchoolProgramController::class, 'store'])->name('program.school.store');
-Route::prefix('school')->name('program.school.')->group(function () {
-    Route::resource('{school}/detail', SchoolProgramController::class);
+Route::prefix('school')->name('school.')->group(function () {
+    Route::resource('{school}/detail', SchoolProgramController::class, [
+        'names' => [
+            'index' => 'school.program.detail.index',
+            'create' => 'school.program.detail.create',
+            'store' => 'school.program.detail.store',
+            'show' => 'school.program.detail.show',
+            'edit' => 'school.program.detail.edit',
+            'update' => 'school.program.detail.update',
+            'destroy' => 'school.program.detail.destroy',
+        ]
+    ]);
     Route::resource('{school}/detail/{sch_prog}/speaker', SchoolProgramSpeakerController::class);
     Route::resource('{school}/detail/{sch_prog}/attach', SchoolProgramAttachController::class);
 });
