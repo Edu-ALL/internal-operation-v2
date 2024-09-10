@@ -120,38 +120,38 @@ class Kernel extends ConsoleKernel
         // $schedule->command('send:thanks_mail_event')->everyFifteenMinutes();
         
         # queue worker
-        $schedule->command('check:queue')->withoutOverlapping()->everyMinute()->onOneServer();
+        // $schedule->command('check:queue')->withoutOverlapping()->everyMinute()->onOneServer();
         // $schedule->command('run:worker')->everyMinute()->withoutOverlapping()->onOneServer();
 
         # run verifying raw data
-        $schedule->command('verified:parent')->withoutOverlapping()->everyMinute()->onOneServer();
-        $schedule->command('verified:school')->withoutOverlapping()->everyMinute()->onOneServer();
-        $schedule->command('verified:student')->withoutOverlapping()->everyMinute()->onOneServer();
-        $schedule->command('verified:teacher')->withoutOverlapping()->everyMinute()->onOneServer();
+        // $schedule->command('verified:parent')->withoutOverlapping()->everyMinute()->onOneServer();
+        // $schedule->command('verified:school')->withoutOverlapping()->everyMinute()->onOneServer();
+        // $schedule->command('verified:student')->withoutOverlapping()->everyMinute()->onOneServer();
+        // $schedule->command('verified:teacher')->withoutOverlapping()->everyMinute()->onOneServer();
 
         # run reminder H-1 EduALL Launchpad
         $schedule->command('reminder:event evt-0014')->withoutOverlapping()->everyMinute()->onOneServer();
         
         # run sync data crm to google sheet
-        $schedule->command('sync:data school')->withoutOverlapping()->hourlyAt(5)->onOneServer();
-        $schedule->command('sync:data partner')->withoutOverlapping()->hourlyAt(10)->onOneServer();
-        $schedule->command('sync:data event')->withoutOverlapping()->hourlyAt(15)->onOneServer();
-        $schedule->command('sync:data program_b2b')->withoutOverlapping()->hourlyAt(20)->onOneServer();
-        $schedule->command('sync:data program_b2c')->withoutOverlapping()->hourlyAt(25)->onOneServer();
-        $schedule->command('sync:data program')->withoutOverlapping()->hourlyAt(30)->onOneServer();
-        $schedule->command('sync:data admission')->withoutOverlapping()->hourlyAt(35)->onOneServer();
-        $schedule->command('sync:data sales')->withoutOverlapping()->hourlyAt(40)->onOneServer();
-        $schedule->command('sync:data mentor')->withoutOverlapping()->hourlyAt(45)->onOneServer();
-        $schedule->command('sync:data employee')->withoutOverlapping()->hourlyAt(50)->onOneServer();
-        $schedule->command('sync:data lead')->withoutOverlapping()->hourlyAt(55)->onOneServer();
-        $schedule->command('sync:data major')->withoutOverlapping()->hourlyAt(8)->onOneServer();
-        $schedule->command('sync:data edufair')->withoutOverlapping()->hourlyAt(13)->onOneServer();
-        $schedule->command('sync:data kol')->withoutOverlapping()->hourlyAt(23)->onOneServer();
-        $schedule->command('sync:data university')->withoutOverlapping()->hourlyAt(37)->onOneServer();
-        $schedule->command('sync:data tutor')->withoutOverlapping()->hourlyAt(42)->onOneServer();
-        $schedule->command('sync:data mentee')->withoutOverlapping()->hourlyAt(57)->onOneServer();
-        $schedule->command('sync:data alumni-mentee')->withoutOverlapping()->hourlyAt(32)->onOneServer();
-        $schedule->command('sync:data tutoring-student')->withoutOverlapping()->hourlyAt(47)->onOneServer();
+        // $schedule->command('sync:data school')->withoutOverlapping()->hourlyAt(5)->onOneServer();
+        // $schedule->command('sync:data partner')->withoutOverlapping()->hourlyAt(10)->onOneServer();
+        // $schedule->command('sync:data event')->withoutOverlapping()->hourlyAt(15)->onOneServer();
+        // $schedule->command('sync:data program_b2b')->withoutOverlapping()->hourlyAt(20)->onOneServer();
+        // $schedule->command('sync:data program_b2c')->withoutOverlapping()->hourlyAt(25)->onOneServer();
+        // $schedule->command('sync:data program')->withoutOverlapping()->hourlyAt(30)->onOneServer();
+        // $schedule->command('sync:data admission')->withoutOverlapping()->hourlyAt(35)->onOneServer();
+        // $schedule->command('sync:data sales')->withoutOverlapping()->hourlyAt(40)->onOneServer();
+        // $schedule->command('sync:data mentor')->withoutOverlapping()->hourlyAt(45)->onOneServer();
+        // $schedule->command('sync:data employee')->withoutOverlapping()->hourlyAt(50)->onOneServer();
+        // $schedule->command('sync:data lead')->withoutOverlapping()->hourlyAt(55)->onOneServer();
+        // $schedule->command('sync:data major')->withoutOverlapping()->hourlyAt(8)->onOneServer();
+        // $schedule->command('sync:data edufair')->withoutOverlapping()->hourlyAt(13)->onOneServer();
+        // $schedule->command('sync:data kol')->withoutOverlapping()->hourlyAt(23)->onOneServer();
+        // $schedule->command('sync:data university')->withoutOverlapping()->hourlyAt(37)->onOneServer();
+        // $schedule->command('sync:data tutor')->withoutOverlapping()->hourlyAt(42)->onOneServer();
+        // $schedule->command('sync:data mentee')->withoutOverlapping()->hourlyAt(57)->onOneServer();
+        // $schedule->command('sync:data alumni-mentee')->withoutOverlapping()->hourlyAt(32)->onOneServer();
+        // $schedule->command('sync:data tutoring-student')->withoutOverlapping()->hourlyAt(47)->onOneServer();
 
         # Get took IA
         // $schedule->command('get:took_ia new-lead')->withoutOverlapping()->everyFiveMinutes()->onOneServer();
