@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Laravel\Sanctum\HasApiTokens;
@@ -21,6 +22,7 @@ class UserClient extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'tbl_client';
+    public $incrementing = false;
     protected $appends = ['lead_source', 'graduation_year_real', 'referral_name'];
 
     /**
@@ -90,6 +92,9 @@ class UserClient extends Authenticatable
         // Send to pusher
         event(New MessageSent('rt_client', 'channel_datatable'));
 
+        // Delete cache birthDay
+        Cache::has('birthDay') ? Cache::forget('birthDay') : null;
+
         return true;
     }
 
@@ -102,6 +107,10 @@ class UserClient extends Authenticatable
         // Custom logic after update
         // Send to pusher
         event(New MessageSent('rt_client', 'channel_datatable'));
+        
+        // Delete cache birthDay
+        Cache::has('birthDay') ? Cache::forget('birthDay') : null;
+
 
         return $updated;
     }
@@ -116,6 +125,9 @@ class UserClient extends Authenticatable
 
         // Send to pusher
         event(New MessageSent('rt_client', 'channel_datatable'));
+
+        // Delete cache birthDay
+        Cache::has('birthDay') ? Cache::forget('birthDay') : null;
 
         return $model;
     }
@@ -309,8 +321,8 @@ class UserClient extends Authenticatable
 
     public function getReferralNameFromRefCodeView($refCode)
     {
-        // return ViewClientRefCode::whereRaw('ref_code COLLATE utf8mb4_unicode_ci = (?)', $refCode)->first()->full_name;
-        return ViewClientRefCode::whereRaw('ref_code = (?)', $refCode)->first()->full_name;
+        return ViewClientRefCode::whereRaw('ref_code COLLATE utf8mb4_unicode_ci = (?)', $refCode)->first()->full_name;
+        // return ViewClientRefCode::whereRaw('ref_code = (?)', $refCode)->first()->full_name;
     }
 
 

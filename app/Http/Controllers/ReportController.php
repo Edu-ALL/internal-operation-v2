@@ -101,7 +101,6 @@ class ReportController extends Controller
         # new get feeder data
         $feeder = $this->schoolRepository->getFeederSchools($eventId);
 
-
         # query existing mentee from client event
         $existingMentee = $this->clientEventRepository->getExistingMenteeFromClientEvent($eventId);
         $id_mentee = $existingMentee->pluck('client_id')->toArray();
@@ -113,7 +112,6 @@ class ReportController extends Controller
 
 
         $undefinedClients = $clients->whereNotIn('client_id', $id_nonMentee)->whereNotIn('client_id', $id_mentee)->unique('client_id');
-        // return count($undefinedClients);
 
         $checkClient = $this->checkExistingOrNewClientEvent($undefinedClients);
 
@@ -129,6 +127,7 @@ class ReportController extends Controller
         return view('pages.report.event-tracking.index')->with(
             [
                 // 'clientEvents' => $clientEvents,
+                // 'existingParentMentee' => $existingParentMentee,
                 'existingMentee' => $existingMentee,
                 'existingNonMentee' => $existingNonMentee,
                 'existingNonClient' => $existingNonClient,
