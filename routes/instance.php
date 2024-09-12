@@ -39,7 +39,9 @@ Route::resource('school/raw', SchoolRawController::class, [
 Route::post('school/raw/bulk/delete', [SchoolRawController::class ,'destroy'])->name('school.raw.bulk.destroy');
 Route::resource('school', SchoolController::class);
 Route::prefix('school')->name('school.')->group(function() {
-    Route::resource('{school}/detail', SchoolDetailController::class);
+    Route::resource('{school}/detail', SchoolDetailController::class, [
+        'only' => ['index', 'create', 'store', 'edit', 'update', 'destroy']
+    ]);
     Route::resource('{school}/program', SchoolDetailController::class);
     Route::post('{school}/visit', [SchoolVisitController::class, 'store'])->name('visit.store');
     Route::put('{school}/visit/{visit}', [SchoolVisitController::class, 'update'])->name('visit.update');
