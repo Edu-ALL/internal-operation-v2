@@ -9,7 +9,9 @@ use App\Interfaces\MenuRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
 use App\Interfaces\UserTypeRepositoryInterface;
 use App\Models\User;
+use App\Services\Authorization\AuthorizationService;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -27,43 +29,32 @@ class AuthController extends Controller
         $this->userTypeRepository = $userTypeRepository;
     }
 
-    public function login(Request $request)
+    public function login(
+        Request $request,
+        AuthorizationService $authorizationService,
+        )
     {
         $credentials = $request->validate([
             'email' => 'required|exists:users,email',
             'password' => 'required',
         ]);
 
-        
         # check credentials
-        if (Auth::attempt($credentials)) {
-            
+        if (!Auth::attempt($credentials))
+            return back()->withErrors([ 'password' => 'Wrong email or password' ]);
+        
+        try {
+
             $user = Auth::user();
-            $user_type = $this->userTypeRepository->getActiveUserTypeByUserId($user->id);
-                        
-            if (!$user_type) {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                return back()->withError([
-                    'password' => 'You don\'t have permission to login. If this problem persists, please contact our administrator.'
-                ]);
-            }
-
-            if ($user_type->type_name != 'Full-Time' && ($user_type->pivot->end_date <= Carbon::now()->toDateString())) {
-                return back()->withError([
-                    'password' => 'Your access is expired',
-                ]);
-            }
-
-            # login Success
-            # create log success
-            $this->logSuccess('auth', null, 'Login', $request->email);
+            $userId = $user->id;
+            // $authorizationService->checkPermissionFromUserType($userId);
+            // $scopes = $authorizationService->checkUserRole($user);
+            // [$generatedToken, $acceptableUserRole] = $authorizationService->authorize($user, $scopes);
+    
+            // $request->session()->put('user_role', $acceptableUserRole);
+            // $request->session()->put('access_token', $generatedToken);
+            // $request->session()->put('scope', $scopes);
             
-            $request->session()->regenerate();
-
-
-
             # check roles
             # set the default scopes
             $scopes = ['employee'];
@@ -119,13 +110,21 @@ class AuthController extends Controller
             
 
            
-            return redirect()->intended('/dashboard');
+            // return redirect()->intended('/dashboard');
+        } catch (Exception $e) {
+
+            Log::debug('Error:'. $e->getMessage());
+            return back()->withError($e->getMessage());
             
         }
 
-        return back()->withErrors([
-            'password' => 'Wrong email or password',
-        ]);
+        # login Success
+        # create log success
+        $this->logSuccess('auth', null, 'Login', $request->email);
+        // $request->session()->regenerate();
+
+        
+        return redirect()->intended('/dashboard');
     }
 
     public function logout(Request $request)
