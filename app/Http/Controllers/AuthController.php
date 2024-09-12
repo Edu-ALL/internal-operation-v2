@@ -47,20 +47,14 @@ class AuthController extends Controller
 
             $user = Auth::user();
             $userId = $user->id;
-            $authorizationService->checkPermissionFromUserType($userId);
-            $scopes = $authorizationService->checkUserRole($user);
-            [$generatedToken, $acceptableUserRole] = $authorizationService->authorize($user, $scopes);
+            // $authorizationService->checkPermissionFromUserType($userId);
+            // $scopes = $authorizationService->checkUserRole($user);
+            // [$generatedToken, $acceptableUserRole] = $authorizationService->authorize($user, $scopes);
     
-            $request->session()->put('user_role', $acceptableUserRole);
-            $request->session()->put('access_token', $generatedToken);
-            $request->session()->put('scope', $scopes);
+            // $request->session()->put('user_role', $acceptableUserRole);
+            // $request->session()->put('access_token', $generatedToken);
+            // $request->session()->put('scope', $scopes);
             
-        } catch (Exception $e) {
-
-            Log::debug('Error:'. $e->getMessage());
-            return back()->withError($e->getMessage());
-
-
             # check roles
             # set the default scopes
             $scopes = ['employee'];
@@ -116,7 +110,11 @@ class AuthController extends Controller
             
 
            
-            return redirect()->intended('/dashboard');
+            // return redirect()->intended('/dashboard');
+        } catch (Exception $e) {
+
+            Log::debug('Error:'. $e->getMessage());
+            return back()->withError($e->getMessage());
             
         }
 
@@ -126,7 +124,7 @@ class AuthController extends Controller
         // $request->session()->regenerate();
 
         
-        return redirect()->intended('/dashboard2');
+        return redirect()->intended('/dashboard');
     }
 
     public function logout(Request $request)
