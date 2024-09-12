@@ -26,10 +26,10 @@
                             Received from :
                         </td>
                         <td>
-                            {{ $receipt->invoiceProgram->clientProg->client->parents[0]->full_name }}
+                            {{ $receipt->invoiceProgram->clientprog->client->full_name }}
                             <br>
-                            {{-- @if ($receipt->invoiceProgram->clientProg->client->parents[0]->state != null)
-                                        {{ $receipt->invoiceProgram->clientProg->client->parents[0]->state }}
+                            {{-- @if ($receipt->invoiceProgram->clientProg->client->state != null)
+                                        {{ $receipt->invoiceProgram->clientProg->client->state }}
                                     @endif --}}
                             @if ($receipt->invoiceProgram->clientProg->client->address != null)
                                 {{ html_entity_decode(strip_tags($receipt->invoiceProgram->clientProg->client->address)) }}

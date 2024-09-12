@@ -22,7 +22,7 @@ class UserClient extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'tbl_client';
-    public $incrementing = false;
+    public $incrementing = true;
     protected $appends = ['lead_source', 'graduation_year_real', 'referral_name'];
 
     /**

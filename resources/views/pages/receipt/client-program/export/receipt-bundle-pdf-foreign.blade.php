@@ -28,8 +28,8 @@
                         <td>
                             {{ $receipt->invoiceProgram->bundling->first_detail->client_program->client->full_name }}
                             <br>
-                            {{-- @if ($receipt->invoiceProgram->clientProg->client->parents[0]->state != null)
-                                        {{ $receipt->invoiceProgram->clientProg->client->parents[0]->state }}
+                            {{-- @if ($receipt->invoiceProgram->clientProg->client->state != null)
+                                        {{ $receipt->invoiceProgram->clientProg->client->state }}
                                     @endif --}}
                             @if ($receipt->invoiceProgram->bundling->first_detail->client_program->client->address != null)
                                 {{ html_entity_decode(strip_tags($receipt->invoiceProgram->bundling->first_detail->client_program->client->address)) }}
