@@ -407,15 +407,11 @@ class GoogleSheetController extends Controller
                     ];
                 }
             } catch (Exception $e) {
-<<<<<<< HEAD
-                Log::error('Failed add job batch import client event', $e->getMessage());
-=======
                 Log::error('Failed to dispatch job import client event', $e->getMessage()  . ' On Line: ' .  $e->getLine());
                 return response()->json([
                     'success' => false,
                     'error' => $e->getMessage()
                 ]);
->>>>>>> origin/development-v2.8.9
             }
            
          
