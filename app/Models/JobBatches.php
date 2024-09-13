@@ -35,8 +35,10 @@ class JobBatches extends Model
         'created_at', 
         'finished_at',
         'total_imported',
+        'total_data',
         'log_details',
-        'type'
+        'type',
+        'category'
     ];
 
     

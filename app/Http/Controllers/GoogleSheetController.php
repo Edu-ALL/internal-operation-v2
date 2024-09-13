@@ -312,73 +312,78 @@ class GoogleSheetController extends Controller
                 ]);
             }
 
-            $rawData = $this->setRawData('Z', $start, $end, 'Client Events');
+            try {
+                $rawData = $this->setRawData('Z', $start, $end, 'Client Events');
         
-            $response = [];
-           
-            if(count($rawData) > 0){
-
-                $arrInputData = $this->setDataForValidation($rawData, 'client-event');
-
-                # validation
-                $rules = [
-                    '*.Event Name' => ['required', 'exists:tbl_events,event_id'],
-                    '*.Date' => ['required', 'date'],
-                    '*.Audience' => ['required', 'in:Student,Parent,Teacher/Counselor'],
-                    '*.Name' => ['required'],
-                    '*.Email' => ['required', 'email', New AlphaNumNoAt],
-                    '*.Phone Number' => ['nullable'],
-                    '*.Child or Parent Name' => ['nullable', 'different:*.name'],
-                    '*.Child or Parent Email' => ['nullable', 'different:*.email'],
-                    '*.Child or Parent Phone Number' => ['nullable', 'different:*.phone_number'],
-                    '*.Registration Type' => ['nullable', 'in:PR,OTS'],
-                    // '*.Existing_new_leads' => ['required', 'in:Existing,New'],
-                    // '*.mentee_non_mentee' => ['required', 'in:Mentee,Non-mentee'],
-                    '*.School' => ['required'],
-                    '*.Class Of' => ['nullable', 'integer'],
-                    '*.Lead' => ['required'],
-                    // '*.Event' => ['required_if:lead,LS003', 'nullable', 'exists:tbl_events,event_id'],
-                    '*.Partner' => ['required_if:lead,LS010', 'nullable', 'exists:tbl_corp,corp_id'],
-                    '*.Edufair' => ['required_if:lead,LS017', 'nullable', 'exists:tbl_eduf_lead,id'],
-                    '*.KOL' => ['required_if:lead,KOL', 'nullable', 'exists:tbl_lead,lead_id'],
-                    '*.Itended Major' => ['nullable'],
-                    '*.Destination Country' => ['nullable'],
-                    '*.Number Of Attend' => ['nullable'],
-                    '*.Referral Code' => ['nullable'],
-                    '*.Reason Join' => ['nullable'],
-                    '*.Expectation Join' => ['nullable'],
-                    '*.Status' => ['required', 'in:Join,Attend'],
-                ];
-
-
-                $validator = Validator::make($arrInputData, $rules);
-
-                # threw error if validation fails
-                if ($validator->fails()) {
-                    Log::warning($validator->errors());
-
-                    return response()->json([
-                        'success' => false,
-                        'error' => $validator->errors()
-                    ]);
+                $response = [];
+               
+                if(count($rawData) > 0){
+    
+                    $arrInputData = $this->setDataForValidation($rawData, 'client-event');
+    
+                    # validation
+                    $rules = [
+                        '*.Event Name' => ['required', 'exists:tbl_events,event_id'],
+                        '*.Date' => ['required', 'date'],
+                        '*.Audience' => ['required', 'in:Student,Parent,Teacher/Counselor'],
+                        '*.Name' => ['required'],
+                        '*.Email' => ['required', 'email', New AlphaNumNoAt],
+                        '*.Phone Number' => ['nullable'],
+                        '*.Child or Parent Name' => ['nullable', 'different:*.name'],
+                        '*.Child or Parent Email' => ['nullable', 'different:*.email'],
+                        '*.Child or Parent Phone Number' => ['nullable', 'different:*.phone_number'],
+                        '*.Registration Type' => ['nullable', 'in:PR,OTS'],
+                        // '*.Existing_new_leads' => ['required', 'in:Existing,New'],
+                        // '*.mentee_non_mentee' => ['required', 'in:Mentee,Non-mentee'],
+                        '*.School' => ['required'],
+                        '*.Class Of' => ['nullable', 'integer'],
+                        '*.Lead' => ['required'],
+                        // '*.Event' => ['required_if:lead,LS003', 'nullable', 'exists:tbl_events,event_id'],
+                        '*.Partner' => ['required_if:lead,LS010', 'nullable', 'exists:tbl_corp,corp_id'],
+                        '*.Edufair' => ['required_if:lead,LS017', 'nullable', 'exists:tbl_eduf_lead,id'],
+                        '*.KOL' => ['required_if:lead,KOL', 'nullable', 'exists:tbl_lead,lead_id'],
+                        '*.Itended Major' => ['nullable'],
+                        '*.Destination Country' => ['nullable'],
+                        '*.Number Of Attend' => ['nullable'],
+                        '*.Referral Code' => ['nullable'],
+                        '*.Reason Join' => ['nullable'],
+                        '*.Expectation Join' => ['nullable'],
+                        '*.Status' => ['required', 'in:Join,Attend'],
+                    ];
+    
+    
+                    $validator = Validator::make($arrInputData, $rules);
+    
+                    # threw error if validation fails
+                    if ($validator->fails()) {
+                        Log::warning($validator->errors());
+    
+                        return response()->json([
+                            'success' => false,
+                            'error' => $validator->errors()
+                        ]);
+                    }
+    
+                    $batchID = (new JobBatchService())->jobBatchFromCollection(Collect($arrInputData), 'import', 'client-event', 10);
+    
+                    JobBatches::where('id', $batchID)->update(['total_data' => count($arrInputData)]);
+    
+                    $response = [
+                        'success' => true,
+                        'batch_id' => $batchID,
+                    ];
+                    
+                }else{
+                    $response = [
+                        'success' => true,
+                        'total_imported' => 0,
+                        'message' => 'Data client events is uptodate'
+                    ];
                 }
-
-                $batchID = (new JobBatchService())->jobBatchFromCollection(Collect($arrInputData), 'import', 'client-event', 10);
-
-                JobBatches::where('id', $batchID)->update(['total_data' => count($arrInputData)]);
-
-                $response = [
-                    'success' => true,
-                    'batch_id' => $batchID,
-                ];
-                
-            }else{
-                $response = [
-                    'success' => true,
-                    'total_imported' => 0,
-                    'message' => 'Data client events is uptodate'
-                ];
+            } catch (Exception $e) {
+                Log::error('Failed add job batch import client event', $e->getMessage());
             }
+           
          
         return response()->json($response);
 
