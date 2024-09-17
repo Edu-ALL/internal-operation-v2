@@ -97,6 +97,7 @@
                 left: (widthView < 768) ? 1 : 2,
                 right: 1
             },
+            pagingType: window.matchMedia('(max-width: 767px)').matches ? 'full' : 'simple_numbers',
             ajax: '',
             columns: [{
                     data: 'id',

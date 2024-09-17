@@ -22,7 +22,7 @@
 
     <div class="card bg-secondary mb-1 p-2">
         <div class="row align-items-center justify-content-between">
-            <div class="col-md-6">
+            <div class="col-md-6 mb-2 mb-md-0">
                 <h5 class="text-white m-0">
                     <i class="bi bi-tag me-1"></i>
                     Deleted Students
@@ -291,6 +291,7 @@
                         params.end_deleted_date = $("#end_deleted_date").val()
                     }
                 },
+                pagingType: window.matchMedia('(max-width: 767px)').matches ? 'full' : 'simple_numbers',
                 columns: [{
                         data: 'id',
                         className: 'text-center',
