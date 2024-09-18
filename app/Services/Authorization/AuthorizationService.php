@@ -60,6 +60,13 @@ class AuthorizationService
             {
                 # the scopes variables should between "employee", "super admin", "admin"
                 $scopes = [$roleName];
+
+                # additional rules of validation
+                # if roleName is "admin" only then we need to check the department where he/she at to determine whose admin would it be
+                if ( $roleName == 'admin' && $user->department()->where('dept_name', 'Client Management')->exists() )
+                {
+                    $scopes = ['sales-admin'];
+                }
             }
         }
 
@@ -77,7 +84,6 @@ class AuthorizationService
             throw new Exception('Something went wrong. Please contact our administrator to help you login.');
         }
 
-        
 
         # create access token 
         # in order to access api with data session
