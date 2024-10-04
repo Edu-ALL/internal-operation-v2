@@ -1985,6 +1985,7 @@ class ExtClientController extends Controller
                     });
             })->
             whereNotNull('email')->
+            isActive()->
             get();
         
         $mappedUser = $user->map(function ($data) {
