@@ -139,6 +139,14 @@
                 </td>
             </tr>
         @endif
+        <!--<tr>-->
+        <!--    <td colspan="3" align="right"><b>Inward Remittance Fee</b></td>-->
+        <!--    <td valign="middle" align="center">-->
+        <!--        <b>-->
+        <!--            ($ 5)-->
+        <!--        </b>-->
+        <!--    </td>-->
+        <!--</tr>-->
         <tr>
             <td colspan="3" align="right"><b>Total</b></td>
             <td valign="middle" align="center">

@@ -557,7 +557,7 @@ class GoogleSheetController extends Controller
                     $studentId = null;
         
                     if ($row['Class Of'] != null || $row['Class Of'] != '') {
-                        $st_grade = 12 - ($row['Class Of'] - date('Y'));
+                        $st_grade = date('m') < 7 ? ($row['Class Of'] - date('Y')) - 12 + 1 : ($row['Class Of'] - date('Y')) - 12;
                     }
         
                     $dataClient = [

@@ -28,7 +28,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    public $incrementing = false;
+    public $incrementing = true;
 
     /**
      * The attributes that are mass assignable.
@@ -36,16 +36,43 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'number',
+        // 'number',
+        // 'id',
+        // 'nip',
+        // 'first_name',
+        // 'last_name',
+        // 'address',
+        // 'email',
+        // 'phone',
+        // 'emergency_contact_phone',
+        // 'emergency_contact_relation_name',
+        // 'datebirth',
+        // 'position_id',
+        // 'password',
+        // 'hiredate',
+        // 'nik',
+        // 'idcard',
+        // 'cv',
+        // 'bankname',
+        // 'bankacc',
+        // 'npwp',
+        // 'tax',
+        // 'active',
+        // 'health_insurance',
+        // 'empl_insurance',
+        // 'export',
+        // 'notes',
+
         'id',
+        'uuid',
         'nip',
+        'extended_id',
         'first_name',
         'last_name',
         'address',
         'email',
         'phone',
-        'emergency_contact_phone',
-        'emergency_contact_relation_name',
+        'emergency_contact',
         'datebirth',
         'position_id',
         'password',

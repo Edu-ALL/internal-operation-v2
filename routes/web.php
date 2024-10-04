@@ -34,6 +34,9 @@ use Illuminate\Support\Facades\Session;
 
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {
+        $clientIP = Request::ip();
+        Log::alert($clientIP);
+
         return view('auth.login');
     });
     
