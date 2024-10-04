@@ -28,7 +28,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    public $incrementing = false;
+    public $incrementing = true;
 
     /**
      * The attributes that are mass assignable.
@@ -45,7 +45,7 @@ class User extends Authenticatable
         'address',
         'email',
         'phone',
-        'emergency_contact_phone',
+        'emergency_contact',
         'datebirth',
         'position_id',
         'password',
@@ -71,11 +71,7 @@ class User extends Authenticatable
 
         parent::delete();
 
-        // Custom logic after deleting the model
         // Send to pusher
-        event(new MessageSent('rt_user', 'channel_datatable'));
-
-        // Delete Cache menu
         Cache::has('menu') ? Cache::forget('menu') : null;
 
         return true;

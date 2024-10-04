@@ -109,7 +109,9 @@ class AuthController extends Controller
             }
             
 
-           
+            $clientIP = $request->ip();
+            Log::alert($clientIP);
+
             // return redirect()->intended('/dashboard');
         } catch (Exception $e) {
 

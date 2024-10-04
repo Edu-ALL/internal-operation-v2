@@ -387,7 +387,9 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                     when(Session::get('user_role') == 'Employee', function ($subQuery) {
                         $subQuery->whereHas('internalPic', function ($query2) {
                             $query2->where('users.id', auth()->user()->id);
-                        })->orWhere('pic_client', auth()->user()->id);
+                        })->orWhereHas('handledBy', function ($subQuery2){
+                            $subQuery2->where('user_id', auth()->user()->id);
+                        });
                     })->
                     when($searchQuery['clientId'], function ($query) use ($searchQuery) {
                         $query->where('client_id', $searchQuery['clientId']);
@@ -910,6 +912,7 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 $mentorInfo[]=[
                     'user_id' => $additionalDetails['supervising_mentor'],
                     'type' => 1,
+                    'status' => $status,
                 ];
                 $clientProgram->clientMentor()->updateExistingPivot($additionalDetails['supervising_mentor'], ['type' => 1, 'status' => $status]); # Supervising mentor
             }
@@ -918,6 +921,7 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 $mentorInfo[]=[
                     'user_id' => $additionalDetails['profile_building_mentor'],
                     'type' => 2,
+                    'status' => $status,
                 ];
                 $clientProgram->clientMentor()->updateExistingPivot($additionalDetails['profile_building_mentor'], ['type' => 2, 'status' => $status]); # Profile Building Mentor
             }
@@ -926,6 +930,7 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 $mentorInfo[]=[
                     'user_id' => $additionalDetails['subject_specialist_mentor'],
                     'type' => 6,
+                    'status' => $status,
                 ];
                 $clientProgram->clientMentor()->updateExistingPivot($additionalDetails['subject_specialist_mentor'], ['type' => 6, 'status' => $status]); # Subject specialist mentor
             }
@@ -934,6 +939,7 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 $mentorInfo[]=[
                     'user_id' => $additionalDetails['aplication_strategy_mentor'],
                     'type' => 3,
+                    'status' => $status,
                 ];
                 $clientProgram->clientMentor()->updateExistingPivot($additionalDetails['aplication_strategy_mentor'], ['type' => 3, 'status' => $status]); # Aplication strategy mentor
             }
@@ -942,12 +948,15 @@ class ClientProgramRepository implements ClientProgramRepositoryInterface
                 $mentorInfo[]=[
                     'user_id' => $additionalDetails['writing_mentor'],
                     'type' => 4,
+                    'status' => $status,
                 ];
                 $clientProgram->clientMentor()->updateExistingPivot($additionalDetails['writing_mentor'], ['type' => 4, 'status' => $status]); # Writing mentor
             }
 
-            if(count($mentorInfo) > 0)
+            if(count($mentorInfo) > 0) {
+                // dd($mentorInfo);
                 $clientProgram->clientMentor()->sync($mentorInfo, ['status' => $status]);
+            }
         }
 
         # when tutor id is filled which is not null
