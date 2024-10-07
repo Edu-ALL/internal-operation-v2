@@ -135,7 +135,7 @@ class User extends Authenticatable
         parent::boot();
 
         self::creating(function ($model) {
-            $model->id = (string) Str::uuid();
+            $model->uuid = (string) Str::uuid();
         });
     }
 
@@ -221,7 +221,7 @@ class User extends Authenticatable
      */
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'tbl_user_roles', 'user_id', 'role_id')->using(UserRole::class)->withTimestamps()->withPivot('id', 'user_id', 'role_id');
+        return $this->belongsToMany(Role::class, 'tbl_user_roles', 'user_id', 'role_id')->using(UserRole::class)->withTimestamps()->withPivot('id', 'user_id', 'role_id', 'extended_id');
     }
 
     public function department()
