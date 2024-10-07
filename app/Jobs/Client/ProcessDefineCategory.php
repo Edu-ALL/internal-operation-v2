@@ -22,15 +22,18 @@ class ProcessDefineCategory implements ShouldQueue
 
     protected ClientRepositoryInterface $clientRepository;
     protected $clientIds;
+    protected $is_many_request;
+
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($clients)
+    public function __construct($clients, $is_many_request = false)
     {
         $this->clientIds = $clients;
+        $this->is_many_request = $is_many_request;
     }
 
     /**
@@ -176,6 +179,7 @@ class ProcessDefineCategory implements ShouldQueue
                 $updatedClients[] = [
                     'client_id' => $student->id,
                     'category' => $category,
+                    'is_many_request' => $this->is_many_request
                 ];
             }
             DB::commit();
