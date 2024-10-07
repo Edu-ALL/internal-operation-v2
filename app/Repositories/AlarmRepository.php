@@ -105,8 +105,8 @@ class AlarmRepository implements AlarmRepositoryInterface
         # Chart lead
         $last3month = $currMonth - 2;
             for ($i = 2; $i >= 0; $i--) {
-                $dataLeadChart['target'][] = $targetTrackingLead->where('month', $last3month)->count() > 0 ? (int)$targetTrackingLead->where('month', $last3month)->first()->target : 0;
-                $dataLeadChart['actual'][] = $targetTrackingLead->where('month', $last3month)->count() > 0 ? (int)$targetTrackingLead->where('month', $last3month)->first()->actual : 0;
+                $dataLeadChart['target'][] = $targetTrackingLead->where('month_year', $last3month)->count() > 0 ? (int)$targetTrackingLead->where('month_year', $last3month)->first()->target : 0;
+                $dataLeadChart['actual'][] = $targetTrackingLead->where('month_year', $last3month)->count() > 0 ? (int)$targetTrackingLead->where('month_year', $last3month)->first()->actual : 0;
                 $dataLeadChart['label'][] = Carbon::now()->startOfMonth()->subMonth($i)->format('F');
     
                 $dataRevenueChart['target'][] = $targetTrackingRevenue->where('month', $last3month)->count() > 0 ? (int)$targetTrackingRevenue->where('month', $last3month)->first()->target : 0;
