@@ -72,7 +72,7 @@ class ImportStudent implements ShouldQueue
             $school = School::where('sch_name', $val['School'])->get()->pluck('sch_id')->first();
 
             if (!isset($school)) {
-                $newSchool = $this->createSchoolIfNotExists($val['School']);
+                $newSchool = $this->createSchoolIfNotExists($val['School'], true);
             }
 
             $mail = isset($val['Email']) ? $val['Email'] : null;

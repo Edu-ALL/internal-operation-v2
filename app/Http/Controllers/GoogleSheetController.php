@@ -557,10 +557,12 @@ class GoogleSheetController extends Controller
                     $studentId = null;
         
                     // if ($row['Class Of'] != null || $row['Class Of'] != '') {
-                    //     if($row['Class Of'] > date('Y')){
-                    //         $st_grade = date('m') < 7 ? 12 - ($row['Class Of'] - date('Y')) + 1 : 12 - ($row['Class Of'] - date('Y'));
-                    //     }else{
-                    //         $st_grade = date('m') < 7 ? 12 + (date('Y') - $row['Class Of']) + 1 : 12 + (date('Y') - $row['Class Of']);
+                    //     if ($row['Class Of'] != null || $row['Class Of'] != '') {
+                    //         if($row['Class Of'] > date('Y')){
+                    //             $st_grade = date('m') < 7 ? 12 - ($row['Class Of'] - date('Y')) + 1 : 12 - ($row['Class Of'] - date('Y'));
+                    //         }else{
+                    //             $st_grade = date('m') < 7 ? 12 + (date('Y') - $row['Class Of']) + 1 : 12 + (date('Y') - $row['Class Of']);
+                    //         }
                     //     }
                     // }
         

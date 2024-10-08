@@ -74,6 +74,7 @@ class ImportParent implements ShouldQueue
                     'event_id' => isset($val['Event']) && $val['Lead'] == 'LS003' ? $val['Event'] : null,
                     'eduf_id' => isset($val['Edufair'])  && $val['Lead'] == 'LS017' ? $val['Edufair'] : null,
                     'st_levelinterest' => $val['Level of Interest'],
+                    'is_many_request' => true
                 ];
 
 
@@ -101,7 +102,7 @@ class ImportParent implements ShouldQueue
                     $school = School::where('sch_name', $val['School'])->first();
 
                     if (!isset($school)) {
-                        $school = $this->createSchoolIfNotExists($val['School']);
+                        $school = $this->createSchoolIfNotExists($val['School'], true);
                     }
 
                     $childrenDetails = [
@@ -112,6 +113,7 @@ class ImportParent implements ShouldQueue
                         'lead_id' => $val['Lead'],
                         'event_id' => isset($val['Event']) && $val['Lead'] == 'LS003' ? $val['Event'] : null,
                         'eduf_id' => isset($val['Edufair'])  && $val['Lead'] == 'LS017' ? $val['Edufair'] : null,
+                        'is_many_request' => true
                     ];
 
                     isset($val['Joined Date']) ? $childrenDetails['created_at'] = $val['Joined Date'] : null;

@@ -59,7 +59,7 @@ class ImportClientProgram implements ShouldQueue
             # initiate variables
             // Check existing school
             if (!$school = School::where('sch_name', $val['School'])->first())
-                $school = $this->createSchoolIfNotExists($val['School']);
+                $school = $this->createSchoolIfNotExists($val['School'], true);
 
             $roleSub = null;
             switch ($val['Audience']) {
