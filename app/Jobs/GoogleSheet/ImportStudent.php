@@ -99,6 +99,7 @@ class ImportStudent implements ShouldQueue
                     'st_levelinterest' => $val['Level of Interest'],
                     'graduation_year' => isset($val['Graduation Year']) ? $val['Graduation Year'] : null,
                     'st_abryear' => isset($val['Year of Study Abroad']) ? $val['Year of Study Abroad'] : null,
+                    'is_many_request' => true,
                 ];
 
                 isset($val['Joined Date']) ? $studentDetails['created_at'] = Carbon::parse($val['Joined Date'] . ' ' . date('H:i:s')) : null;
@@ -135,6 +136,7 @@ class ImportStudent implements ShouldQueue
                                 'first_name' => $name['firstname'],
                                 'last_name' => isset($name['lastname']) ? $name['lastname'] : null,
                                 'phone' => isset($parentPhone) ? $parentPhone : null,
+                                'is_many_request' => true,
                             ];
 
                             $roleId = Role::whereRaw('LOWER(role_name) = (?)', ['parent'])->first();
@@ -150,6 +152,7 @@ class ImportStudent implements ShouldQueue
                             'first_name' => $name['firstname'],
                             'last_name' => isset($name['lastname']) ? $name['lastname'] : null,
                             'phone' => isset($parentPhone) ? $parentPhone : null,
+                            'is_many_request' => true,
                         ];
 
                         $roleId = Role::whereRaw('LOWER(role_name) = (?)', ['parent'])->first();
@@ -190,15 +193,15 @@ class ImportStudent implements ShouldQueue
         }
 
         # trigger to verifying children
-        count($childIds) > 0 ? ProcessVerifyClient::dispatch($childIds)->onQueue('verifying-client') : null;
+        count($childIds) > 0 ? ProcessVerifyClient::dispatch($childIds, true)->onQueue('verifying-client') : null;
 
         # trigger to define category children
-        count($childIds) > 0 ? ProcessDefineCategory::dispatch($childIds)->onQueue('define-category-client') : null;
+        count($childIds) > 0 ? ProcessDefineCategory::dispatch($childIds, true)->onQueue('define-category-client') : null;
 
         # trigger to verifying parent
-        count($parentIds) > 0 ? ProcessVerifyClientParent::dispatch($parentIds)->onQueue('verifying-client-parent') : null;
+        count($parentIds) > 0 ? ProcessVerifyClientParent::dispatch($parentIds, true)->onQueue('verifying-client-parent') : null;
 
-        Sheets::spreadsheet(env('GOOGLE_SHEET_KEY_IMPORT'))->sheet('Students')->range('Z'. $this->studentData->first()['No'] + 1)->update($imported_date);
+        Sheets::spreadsheet(env('GOOGLE_SHEET_KEY_IMPORT'))->sheet('test student')->range('Z'. $this->studentData->first()['No'] + 1)->update($imported_date);
         $dataJobBatches = JobBatches::find($this->batch()->id);
         
         $logDetailsCollection = Collect($logDetails);
