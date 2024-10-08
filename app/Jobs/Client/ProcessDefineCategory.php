@@ -174,12 +174,11 @@ class ProcessDefineCategory implements ShouldQueue
                 //     'alumniNonMentee' => $alumniNonMentee,
                 // ];
 
-                $clientRepository->updateClient($student->id, ['category' => $category]);
+                $clientRepository->updateClient($student->id, ['category' => $category, 'is_many_request' => $this->is_many_request]);
 
                 $updatedClients[] = [
                     'client_id' => $student->id,
                     'category' => $category,
-                    'is_many_request' => $this->is_many_request
                 ];
             }
             DB::commit();
