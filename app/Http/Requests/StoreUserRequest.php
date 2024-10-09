@@ -55,9 +55,9 @@ class StoreUserRequest extends FormRequest
             'datebirth' => 'required',
             'address' => 'required',
 
-            'graduated_from.*' => 'nullable',
-            'degree.*' => 'nullable',
-            'major.*' => 'nullable',
+            'graduated_from.*' => 'nullable|required_with:degree,major',
+            'degree.*' => 'nullable|required_with:major,graduated_from',
+            'major.*' => 'nullable|required_with:degree,graduated_from',
 
             'role.*' => 'required|in:1,2,3,4,18',
             'department' => 'required',
@@ -119,9 +119,9 @@ class StoreUserRequest extends FormRequest
             'datebirth' => 'required',
             'address' => 'required',
 
-            'graduated_from.*' => 'nullable',
-            'degree.*' => 'nullable',
-            'major.*' => 'nullable',
+            'graduated_from.*' => 'nullable|required_with:degree,major',
+            'degree.*' => 'nullable|required_with:major,graduated_from',
+            'major.*' => 'nullable|required_with:degree,graduated_from',
 
             'role.*' => 'required|in:1,2,3,4,18',
             'department' => 'required',
