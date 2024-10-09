@@ -70,8 +70,8 @@ class AlarmController extends Controller
             $dataLeadChart['actual'][] = $targetTrackingLead->where('month_year',  $monthYear->subMonth($i)->format('Y-m'))->count() > 0 ? (int)$targetTrackingLead->where('month_year',  $monthYear->subMonth($i)->format('Y-m'))->first()->actual : 0;
             $dataLeadChart['label'][] = Carbon::now()->startOfMonth()->subMonth($i)->format('F');
 
-            $dataRevenueChart['target'][] = $targetTrackingRevenue->where('month',  $monthYear->subMonth($i)->format('Y-m'))->count() > 0 ? (int)$targetTrackingRevenue->where('month',  $monthYear->subMonth($i)->format('Y-m'))->first()->target : 0;
-            $dataRevenueChart['actual'][] = $targetTrackingRevenue->where('month',  $monthYear->subMonth($i)->format('Y-m'))->count() > 0 ? (int)$targetTrackingRevenue->where('month',  $monthYear->subMonth($i)->format('Y-m'))->first()->actual : 0;
+            $dataRevenueChart['target'][] = $targetTrackingRevenue->where('month_year',  $monthYear->subMonth($i)->format('Y-m'))->count() > 0 ? (int)$targetTrackingRevenue->where('month_year',  $monthYear->subMonth($i)->format('Y-m'))->first()->target : 0;
+            $dataRevenueChart['actual'][] = $targetTrackingRevenue->where('month_year',  $monthYear->subMonth($i)->format('Y-m'))->count() > 0 ? (int)$targetTrackingRevenue->where('month_year',  $monthYear->subMonth($i)->format('Y-m'))->first()->actual : 0;
             $dataRevenueChart['label'][] = Carbon::now()->startOfMonth()->subMonth($i)->format('F');
         }
 
