@@ -506,6 +506,30 @@ return new class extends Migration
             END IF;
         END; //
         DELIMITER ;
+
+        # R
+        DELIMITER //
+
+        CREATE OR REPLACE FUNCTION SetHotLeadsByDivision ( initial_consult_target INTEGER, division VARCHAR(20) )
+        RETURNS INTEGER
+        DETERMINISTIC
+
+        BEGIN
+            DECLARE hot_leads_target INTEGER;
+            DECLARE multiplier INTEGER;
+
+            SET multiplier = 
+                CASE 
+                    WHEN division = "Sales" THEN 2
+                    WHEN division = "Referral" THEN 1
+                    WHEN division = "Digital" THEN 3
+                END;
+
+            SET hot_leads_target = initial_consult_target * multiplier;
+            RETURN hot_leads_target;
+        END; //
+        DELIMITER ;
+
         ');
     }
 
